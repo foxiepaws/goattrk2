@@ -1,0 +1,10 @@
+all: dat2inc.exe datafile.exe
+
+datafile.exe: datafile.o bme_end.o
+	gcc -o datafile.exe datafile.o bme_end.o
+	strip datafile.exe
+
+dat2inc.exe: dat2inc.o
+	gcc -o dat2inc.exe dat2inc.o
+	strip dat2inc.exe
+
