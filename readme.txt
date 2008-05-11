@@ -1,4 +1,4 @@
-GoatTracker v2.65
+GoatTracker v2.66
 -----------------
 
 Editor by Lasse Öörni (loorni@gmail.com)
@@ -1794,3 +1794,7 @@ v2.64     - Fixed paste in table (SHIFT+V) working also without SHIFT pressed.
 
 v2.65     - Fixed raw keycodes over 511 interpreted as some other keys in the
             0-511 range.
+
+v2.66     - Initial cycle-exact HardSID support (Win32 only)
+          - Permit running without sound.
+

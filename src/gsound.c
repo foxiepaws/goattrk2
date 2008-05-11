@@ -27,16 +27,25 @@ Uint32 sound_timer(Uint32 interval);
 #ifdef __WIN32__
 
 // Win32 HardSID output
-typedef void (CALLBACK* lpWriteToHardSID)(Uint8 DeviceID, Uint8 SID_reg, Uint8 data);
+typedef void (CALLBACK* lpWriteToHardSID)(Uint8 DeviceID, Uint8 SID_reg, Uint8 Data);
 typedef Uint8 (CALLBACK* lpReadFromHardSID)(Uint8 DeviceID, Uint8 SID_reg);
 typedef void (CALLBACK* lpInitHardSID_Mapper)(void);
-typedef void (CALLBACK* lpMuteHardSID_Line)(int mute);
+typedef void (CALLBACK* lpMuteHardSID_Line)(int Mute);
+typedef void (CALLBACK* lpHardSID_Delay)(Uint8 DeviceID, Uint16 Cycles);
+typedef void (CALLBACK* lpHardSID_Write)(Uint8 DeviceID, Uint16 Cycles, Uint8 SID_reg, Uint8 Data);
 lpWriteToHardSID WriteToHardSID;
 lpReadFromHardSID ReadFromHardSID;
 lpInitHardSID_Mapper InitHardSID_Mapper;
 lpMuteHardSID_Line MuteHardSID_Line;
+lpHardSID_Delay HardSID_Delay;
+lpHardSID_Write HardSID_Write;
 HINSTANCE hardsiddll = 0;
 int dll_initialized = FALSE;
+// Cycle-exact HardSID support
+int cycleexacthardsid = FALSE;
+SDL_Thread* playerthread = NULL;
+volatile int runplayerthread = FALSE;
+int sound_thread(void *userdata);
 
 void InitHardDLL(void);
 
@@ -100,6 +109,16 @@ int sound_init(unsigned b, unsigned mr, unsigned writer, unsigned hardsid, unsig
       MuteHardSID_Line(FALSE);
     }
     else return 0;
+    if (!cycleexacthardsid)
+    {
+      SDL_SetTimer(1000 / framerate, sound_timer);
+    }
+    else
+    {
+      runplayerthread = TRUE;
+      playerthread = SDL_CreateThread(sound_thread, NULL);
+      if (!playerthread) return 0;
+    }
     #else
     char filename[80];
     sprintf(filename, "/dev/sid%d", hardsid-1);
@@ -114,8 +133,9 @@ int sound_init(unsigned b, unsigned mr, unsigned writer, unsigned hardsid, unsig
       }
     }
     else return 0;
-    #endif
     SDL_SetTimer(1000 / framerate, sound_timer);
+    #endif
+
     goto SOUNDOK;
   }
 
@@ -181,7 +201,20 @@ void sound_uninit(void)
 
   if (usehardsid || usecatweasel)
   {
+    #ifdef WIN32
+    if (!playerthread)
+    {
+      SDL_SetTimer(0, NULL);
+    }
+    else
+    {
+      runplayerthread = FALSE;
+      SDL_WaitThread(playerthread, NULL);
+      playerthread = NULL;
+    }
+    #else
     SDL_SetTimer(0, NULL);
+    #endif
   }
   else
   {
@@ -257,6 +290,44 @@ Uint32 sound_timer(Uint32 interval)
   return interval;
 }
 
+int sound_thread(void *userdata)
+{
+  while (runplayerthread)
+  {
+    unsigned cycles = 1000000 / framerate; // HardSID should be clocked at 1MHz
+    int c;
+
+    playroutine();
+
+    for (c = 0; c < NUMSIDREGS; c++)
+    {
+      unsigned o = sid_getorder(c);
+
+  	  // Extra delay before loading the waveform (and mt_chngate,x)
+  	  if ((o == 4) || (o == 11) || (o == 18))
+  	  {
+  	    HardSID_Delay(usehardsid-1, SIDWAVEDELAY);
+  	    cycles -= SIDWAVEDELAY;
+      }
+
+      HardSID_Write(usehardsid-1, SIDWRITEDELAY, o, sidreg[o]);
+      cycles -= SIDWRITEDELAY;
+    }
+    
+    // Now wait the rest of frame
+    while (cycles)
+    {
+      unsigned runnow = cycles;
+      if (runnow > 65535) runnow = 65535;
+      HardSID_Delay(usehardsid-1, runnow);
+      cycles -= runnow;
+    }
+  }
+
+  return 0;
+}
+
+
 void sound_playrout(void)
 {
   int c;
@@ -331,6 +402,11 @@ void InitHardDLL()
   MuteHardSID_Line = (lpMuteHardSID_Line) GetProcAddress(hardsiddll, "MuteHardSID_Line");
 
   if (!WriteToHardSID) return;
+
+  // Try to get cycle-exact interface
+  HardSID_Delay = (lpHardSID_Delay) GetProcAddress(hardsiddll, "HardSID_Delay");
+  HardSID_Write = (lpHardSID_Write) GetProcAddress(hardsiddll, "HardSID_Write");
+  if ((HardSID_Delay) && (HardSID_Write)) cycleexacthardsid = TRUE;
 
   InitHardSID_Mapper();
   dll_initialized = TRUE;
