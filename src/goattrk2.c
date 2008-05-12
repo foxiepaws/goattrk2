@@ -1,5 +1,5 @@
 //
-// GOATTRACKER v2.66
+// GOATTRACKER v2.66 Beta
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -74,7 +74,7 @@ unsigned char instrfilter[MAX_FILENAME];
 unsigned char instrpath[MAX_PATHNAME];
 unsigned char packedpath[MAX_PATHNAME];
 
-char *programname = "GoatTracker v2.66";
+char *programname = "GoatTracker v2.66Beta";
                                       
 char textbuffer[MAX_PATHNAME];
 

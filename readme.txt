@@ -1,5 +1,5 @@
-GoatTracker v2.66
------------------
+GoatTracker v2.66 Beta
+----------------------
 
 Editor by Lasse Öörni (loorni@gmail.com)
 Uses reSID engine by Dag Lem.
@@ -221,10 +221,9 @@ CatWeasel MK3 PCI SID support is available with /C option (/C1 to turn on).
 To use the PC64 cable, you need Daniel Illgen's HardSID-DLL-Clone. Available at
 http://dawork.synchronus.de/
 
-Multispeeds higher than 2x do not seem to work too well with the HardSID,
-because the operating system timers' granularity comes into play. With emulated
-output this problem does not exist, as the audio output happens with a whole
-audiobuffer's worth of samples / SID cycles at a time.
+To enable better support of multispeeds and cycle-exact timing on HardSID 
+(currently win32 only) download the enhanced HardSID.dll from
+http://sourceforge.net/project/showfiles.php?group_id=9266&release_id=61843
 
 Finevibrato mode is on by default. You can change this behaviour with /V
 option. Note that finevibrato mode only affects the conversion of old style
@@ -1795,6 +1794,6 @@ v2.64     - Fixed paste in table (SHIFT+V) working also without SHIFT pressed.
 v2.65     - Fixed raw keycodes over 511 interpreted as some other keys in the
             0-511 range.
 
-v2.66     - Initial cycle-exact HardSID support (Win32 only)
+v2.66Beta - Initial cycle-exact HardSID support (Win32 only)
           - Permit running without sound.
 

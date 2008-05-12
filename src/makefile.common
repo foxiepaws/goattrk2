@@ -46,4 +46,7 @@ goatdata.c: goattrk2.dat
 
 clean:
 	$(RM) *.o *~
+	$(RM) asm/*.o
+	$(RM) bme/*.o
+	$(RM) resid/*.o
 	$(RM) $(EXE)
