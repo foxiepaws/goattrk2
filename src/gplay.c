@@ -118,34 +118,54 @@ void playtestnote(int note, int ins, int chnnum)
     return;
   }
 
-  // We want this next operation to be "atomic" (no playroutine calls in the meanwhile)
-  // because we fiddle directly with player state & sid regs
-  sound_suspend();
-
-  if (!(instr[ins].gatetimer & 0x40))
+  if (songinit == PLAY_STOPPED)
   {
-    chn[chnnum].gate = 0xfe; // Keyoff
-    if (!(instr[ins].gatetimer & 0x80))
+    // We want this next operation to be "atomic" (no playroutine calls
+    // in the meanwhile) because we fiddle directly with player state & sid regs
+    sound_suspend();
+
+    if (!(instr[ins].gatetimer & 0x40))
     {
-      sidreg[0x5+chnnum*7] = adparam>>8; // Hardrestart
-      sidreg[0x6+chnnum*7] = adparam&0xff;
+      chn[chnnum].gate = 0xfe; // Keyoff
+      if (!(instr[ins].gatetimer & 0x80))
+      {
+        sidreg[0x5+chnnum*7] = adparam>>8; // Hardrestart
+        sidreg[0x6+chnnum*7] = adparam&0xff;
+      }
     }
-  }
 
-  chn[chnnum].instr = ins;
-  chn[chnnum].newnote = note;
-  if (songinit == 0x80)
-  {
+    chn[chnnum].instr = ins;
+    chn[chnnum].newnote = note;
     chn[chnnum].tick = (instr[ins].gatetimer & 0x3f)+1;
     chn[chnnum].gatetimer = instr[ins].gatetimer & 0x3f;
-  }
 
-  sound_flush();
+    sound_flush();
+  }
+  else
+  {
+    // However, if the song is already playing, can't do suspend/flush because
+    // it would lead into a jump in the sound playback
+    if (!(instr[ins].gatetimer & 0x40))
+    {
+      chn[chnnum].gate = 0xfe; // Keyoff
+      if (!(instr[ins].gatetimer & 0x80))
+      {
+        sidreg[0x5+chnnum*7] = adparam>>8; // Hardrestart
+        sidreg[0x6+chnnum*7] = adparam&0xff;
+      }
+    }
+
+    chn[chnnum].instr = ins;
+    chn[chnnum].newnote = note;
+  }
 }
 
 void releasenote(int chnnum)
 {
   chn[chnnum].gate = 0xfe;
+
+  if (songinit == PLAY_STOPPED)
+    sound_flush();
 }
 
 void mutechannel(int chnnum)
