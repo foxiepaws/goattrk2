@@ -85,6 +85,7 @@ void initsong(int num, int mode)
   psnum = num;
   songinit = mode;
   startpattpos = 0;
+  sound_flush();
 }
 
 void initsongpos(int num, int mode, int pattpos)
@@ -93,11 +94,13 @@ void initsongpos(int num, int mode, int pattpos)
   psnum = num;
   songinit = mode;
   startpattpos = pattpos;
+  sound_flush();
 }
 
 void stopsong(void)
 {
   songinit = PLAY_STOP;
+  sound_flush();
 }
 
 void rewindsong(void)
@@ -114,6 +117,10 @@ void playtestnote(int note, int ins, int chnnum)
     releasenote(chnnum);
     return;
   }
+
+  // We want this next operation to be "atomic" (no playroutine calls in the meanwhile)
+  // because we fiddle directly with player state & sid regs
+  sound_suspend();
 
   if (!(instr[ins].gatetimer & 0x40))
   {
@@ -132,6 +139,8 @@ void playtestnote(int note, int ins, int chnnum)
     chn[chnnum].tick = (instr[ins].gatetimer & 0x3f)+1;
     chn[chnnum].gatetimer = instr[ins].gatetimer & 0x3f;
   }
+
+  sound_flush();
 }
 
 void releasenote(int chnnum)
@@ -148,6 +157,7 @@ int isplaying(void)
 {
   return (songinit == PLAY_PLAYING);
 }
+
 void playroutine(void)
 {
   INSTR *iptr;
@@ -235,7 +245,7 @@ void playroutine(void)
       songinit = PLAY_STOPPED;
     if ((!songlen[psnum][0]) || (!songlen[psnum][1]) || (!songlen[psnum][2]))
       songinit = PLAY_STOPPED; // Zero length song
-      
+
     startpattpos = 0;
   }
   else
