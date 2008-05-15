@@ -81,6 +81,7 @@ void initchannels(void)
 
 void initsong(int num, int mode)
 {
+  sound_suspend();
   songinit = PLAY_STOPPED;
   psnum = num;
   songinit = mode;
@@ -90,6 +91,7 @@ void initsong(int num, int mode)
 
 void initsongpos(int num, int mode, int pattpos)
 {
+  sound_suspend();
   songinit = PLAY_STOPPED;
   psnum = num;
   songinit = mode;
@@ -99,6 +101,7 @@ void initsongpos(int num, int mode, int pattpos)
 
 void stopsong(void)
 {
+  sound_suspend();
   songinit = PLAY_STOP;
   sound_flush();
 }
