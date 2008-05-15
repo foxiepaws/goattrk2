@@ -336,11 +336,12 @@ int sound_thread(void *userdata)
       {
         HardSID_Flush(usehardsid-1);
       }
-      SDL_Delay(0);
       // Can clear player suspend now (if set)
       suspendplayroutine = FALSE;
       flushplayerthread = FALSE;
 	  SDL_UnlockMutex(flushmutex);
+	  
+      SDL_Delay(0);	  
     }
 
     if (!suspendplayroutine) playroutine();
