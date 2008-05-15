@@ -48,6 +48,7 @@ int dll_initialized = FALSE;
 // Cycle-exact HardSID support
 int cycleexacthardsid = FALSE;
 SDL_Thread* playerthread = NULL;
+SDL_mutex* flushmutex = NULL;
 volatile int runplayerthread = FALSE;
 volatile int flushplayerthread = FALSE;
 volatile int suspendplayroutine = FALSE;
@@ -70,6 +71,11 @@ int catweaselfd = -1;
 int sound_init(unsigned b, unsigned mr, unsigned writer, unsigned hardsid, unsigned m, unsigned ntsc, unsigned multiplier, unsigned catweasel, unsigned interpolate, unsigned customclockrate)
 {
   int c;
+
+  #ifdef __WIN32__
+  if (!flushmutex)
+  	flushmutex = SDL_CreateMutex();
+  #endif
 
   sound_uninit();
 
@@ -207,7 +213,7 @@ void sound_uninit(void)
 
   if (usehardsid || usecatweasel)
   {
-    #ifdef WIN32
+    #ifdef __WIN32__
     if (!playerthread)
     {
       SDL_SetTimer(0, NULL);
@@ -291,15 +297,19 @@ void sound_uninit(void)
 
 void sound_suspend(void)
 {
-  #ifdef WIN32
+  #ifdef __WIN32__
+  SDL_LockMutex(flushmutex);
   suspendplayroutine = TRUE;
+  SDL_UnlockMutex(flushmutex);
   #endif
 }
 
 void sound_flush(void)
 {
-  #ifdef WIN32
+  #ifdef __WIN32__
+  SDL_LockMutex(flushmutex);
   flushplayerthread = TRUE;
+  SDL_UnlockMutex(flushmutex);
   #endif
 }
 
@@ -310,6 +320,7 @@ Uint32 sound_timer(Uint32 interval)
   return interval;
 }
 
+#ifdef __WIN32__
 int sound_thread(void *userdata)
 {
   while (runplayerthread)
@@ -320,6 +331,7 @@ int sound_thread(void *userdata)
     // Do flush if starting playback, stopping playback, starting an interactive note etc.
     if (flushplayerthread)
     {
+	  SDL_LockMutex(flushmutex);
       if (HardSID_Flush)
       {
         HardSID_Flush(usehardsid-1);
@@ -332,6 +344,7 @@ int sound_thread(void *userdata)
       // Can clear player suspend now (if set)
       suspendplayroutine = FALSE;
       flushplayerthread = FALSE;
+	  SDL_UnlockMutex(flushmutex);
     }
 
     if (!suspendplayroutine) playroutine();
@@ -363,7 +376,7 @@ int sound_thread(void *userdata)
 
   return 0;
 }
-
+#endif
 
 void sound_playrout(void)
 {
