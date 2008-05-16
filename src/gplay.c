@@ -121,37 +121,22 @@ void playtestnote(int note, int ins, int chnnum)
     return;
   }
 
+  if (!(instr[ins].gatetimer & 0x40))
+  {
+    chn[chnnum].gate = 0xfe; // Keyoff
+    if (!(instr[ins].gatetimer & 0x80))
+    {
+      sidreg[0x5+chnnum*7] = adparam>>8; // Hardrestart
+      sidreg[0x6+chnnum*7] = adparam&0xff;
+    }
+  }
+
+  chn[chnnum].instr = ins;
+  chn[chnnum].newnote = note;
   if (songinit == PLAY_STOPPED)
   {
-    if (!(instr[ins].gatetimer & 0x40))
-    {
-      chn[chnnum].gate = 0xfe; // Keyoff
-      if (!(instr[ins].gatetimer & 0x80))
-      {
-        sidreg[0x5+chnnum*7] = adparam>>8; // Hardrestart
-        sidreg[0x6+chnnum*7] = adparam&0xff;
-      }
-    }
-
-    chn[chnnum].instr = ins;
-    chn[chnnum].newnote = note;
     chn[chnnum].tick = (instr[ins].gatetimer & 0x3f)+1;
     chn[chnnum].gatetimer = instr[ins].gatetimer & 0x3f;
-  }
-  else
-  {
-    if (!(instr[ins].gatetimer & 0x40))
-    {
-      chn[chnnum].gate = 0xfe; // Keyoff
-      if (!(instr[ins].gatetimer & 0x80))
-      {
-        sidreg[0x5+chnnum*7] = adparam>>8; // Hardrestart
-        sidreg[0x6+chnnum*7] = adparam&0xff;
-      }
-    }
-
-    chn[chnnum].instr = ins;
-    chn[chnnum].newnote = note;
   }
 }
 
