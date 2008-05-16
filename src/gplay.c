@@ -123,10 +123,6 @@ void playtestnote(int note, int ins, int chnnum)
 
   if (songinit == PLAY_STOPPED)
   {
-    // Jam mode test note
-
-    //sound_suspend();
-
     if (!(instr[ins].gatetimer & 0x40))
     {
       chn[chnnum].gate = 0xfe; // Keyoff
@@ -141,13 +137,9 @@ void playtestnote(int note, int ins, int chnnum)
     chn[chnnum].newnote = note;
     chn[chnnum].tick = (instr[ins].gatetimer & 0x3f)+1;
     chn[chnnum].gatetimer = instr[ins].gatetimer & 0x3f;
-
-    // sound_flush();
   }
   else
   {
-    // Play mode test note - can't mess with the tempocounter
-
     if (!(instr[ins].gatetimer & 0x40))
     {
       chn[chnnum].gate = 0xfe; // Keyoff
@@ -166,9 +158,6 @@ void playtestnote(int note, int ins, int chnnum)
 void releasenote(int chnnum)
 {
   chn[chnnum].gate = 0xfe;
-
-  //if (songinit == PLAY_STOPPED)
-  //  sound_flush();
 }
 
 void mutechannel(int chnnum)

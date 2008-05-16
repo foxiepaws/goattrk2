@@ -75,6 +75,8 @@ extern unsigned writer;
 extern unsigned hardsid;
 extern unsigned catweasel;
 extern unsigned interpolate;
+extern unsigned hardsidbufinteractive;
+extern unsigned hardsidbufplayback;
 extern char *configptr;
 extern char configbuf[MAX_PATHNAME];
 extern unsigned char loadedsongfilename[MAX_FILENAME];

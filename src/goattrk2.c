@@ -1,5 +1,5 @@
 //
-// GOATTRACKER v2.66 Beta
+// GOATTRACKER v2.67
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -62,6 +62,8 @@ unsigned hardsid = 0;
 unsigned catweasel = 0;
 unsigned interpolate = 0;
 unsigned residdelay = 0;
+unsigned hardsidbufinteractive = 20;
+unsigned hardsidbufplayback = 400;
 
 char *configptr;
 char configbuf[MAX_PATHNAME];
@@ -74,7 +76,7 @@ unsigned char instrfilter[MAX_FILENAME];
 unsigned char instrpath[MAX_PATHNAME];
 unsigned char packedpath[MAX_PATHNAME];
 
-char *programname = "GoatTracker v2.66Beta";
+char *programname = "GoatTracker v2.67";
                                       
 char textbuffer[MAX_PATHNAME];
 
@@ -128,6 +130,8 @@ int main(int argc, char **argv)
     getparam(configfile, &optimizerealtime);
     getparam(configfile, &residdelay);
     getparam(configfile, &customclockrate);
+    getparam(configfile, &hardsidbufinteractive);
+    getparam(configfile, &hardsidbufplayback);
     fclose(configfile);
   }
   zeropageadr &= 0xff;
@@ -169,6 +173,8 @@ int main(int argc, char **argv)
         printtext(0,y++,15,"/Oxx Set pulseoptimization/skipping (0 = off, 1 = on) DEFAULT=on");
         printtext(0,y++,15,"/Rxx Set realtime-effect optimization/skipping (0 = off, 1 = on) DEFAULT=on");
         printtext(0,y++,15,"/Sxx Set speed multiplier (0 for 25Hz, 1 for 1x, 2 for 2x etc.)");
+        printtext(0,y++,15,"/Txx Set HardSID interactive mode sound buffer length in milliseconds DEFAULT=20, max.buffering=0");
+        printtext(0,y++,15,"/Uxx Set HardSID playback mode sound buffer length in milliseconds DEFAULT=400, max.buffering=0");
         printtext(0,y++,15,"/Vxx Set finevibrato conversion (0 = off, 1 = on) DEFAULT=1");
         printtext(0,y++,15,"/Zxx Set random reSID write delay in cycles (0 = off) DEFAULT=off");
         printtext(0,y++,15,"/N   Use NTSC timing");
@@ -246,6 +252,14 @@ int main(int argc, char **argv)
 
         case 'V':
         sscanf(&argv[c][2], "%u", &finevibrato);
+        break;
+        
+        case 'T':
+        sscanf(&argv[c][2], "%u", &hardsidbufinteractive);
+        break;
+
+        case 'U':
+        sscanf(&argv[c][2], "%u", &hardsidbufplayback);
         break;
 
         case 'W':
@@ -348,7 +362,9 @@ int main(int argc, char **argv)
                         ";Pulseskipping (0 = off, 1 = on)\n%d\n\n"
                         ";Realtime effect skipping (0 = off, 1 = on)\n%d\n\n"
                         ";Random reSID write delay in cycles (0 = off)\n%d\n\n"
-                        ";Custom SID clock cycles per second (0 = use PAL/NTSC default)\n%d\n\n",
+                        ";Custom SID clock cycles per second (0 = use PAL/NTSC default)\n%d\n\n"
+                        ";HardSID interactive mode buffer size (in milliseconds, 0 = maximum/no flush)\n%d\n\n"
+                        ";HardSID playback mode buffer size (in milliseconds, 0 = maximum/no flush)\n%d\n\n",
     b,
     mr,
     hardsid,
@@ -370,7 +386,9 @@ int main(int argc, char **argv)
     optimizepulse,
     optimizerealtime,
     residdelay,
-    customclockrate);
+    customclockrate,
+    hardsidbufinteractive,
+    hardsidbufplayback);
 
     fclose(configfile);
   }

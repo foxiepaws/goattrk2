@@ -323,15 +323,25 @@ Uint32 sound_timer(Uint32 interval)
 #ifdef __WIN32__
 int sound_thread(void *userdata)
 {
+  unsigned long flush_cycles_interactive = hardsidbufinteractive * 1000; /* 0 = flush off for interactive mode*/
+  unsigned long flush_cycles_playback = hardsidbufplayback * 1000; /* 0 = flush off for playback mode*/
+  unsigned long cycles_after_flush = 0;
+  boolean interactive;
+
   while (runplayerthread)
   {
     unsigned cycles = 1000000 / framerate; // HardSID should be clocked at 1MHz
     int c;
 
-    // Do flush if starting playback, stopping playback, starting an interactive note etc.
+    if (flush_cycles_interactive > 0 || flush_cycles_playback > 0) 
+    {
+      cycles_after_flush += cycles;
+    }
+
+	  // Do flush if starting playback, stopping playback, starting an interactive note etc.
     if (flushplayerthread)
     {
-	  SDL_LockMutex(flushmutex);
+	    SDL_LockMutex(flushmutex);
       if (HardSID_Flush)
       {
         HardSID_Flush(usehardsid-1);
@@ -339,12 +349,14 @@ int sound_thread(void *userdata)
       // Can clear player suspend now (if set)
       suspendplayroutine = FALSE;
       flushplayerthread = FALSE;
-	  SDL_UnlockMutex(flushmutex);
-	  
-      SDL_Delay(0);	  
+      SDL_UnlockMutex(flushmutex);
+
+      SDL_Delay(0);
     }
 
     if (!suspendplayroutine) playroutine();
+
+    interactive = !(boolean)recordmode /* jam mode */ || !(boolean)isplaying();
 
     for (c = 0; c < NUMSIDREGS; c++)
     {
@@ -353,12 +365,14 @@ int sound_thread(void *userdata)
   	  // Extra delay before loading the waveform (and mt_chngate,x)
   	  if ((o == 4) || (o == 11) || (o == 18))
   	  {
-  	    HardSID_Delay(usehardsid-1, SIDWAVEDELAY);
-  	    cycles -= SIDWAVEDELAY;
+        HardSID_Write(usehardsid-1, SIDWRITEDELAY+SIDWAVEDELAY, o, sidreg[o]);
+  	    cycles -= SIDWRITEDELAY+SIDWAVEDELAY;
       }
-
-      HardSID_Write(usehardsid-1, SIDWRITEDELAY, o, sidreg[o]);
-      cycles -= SIDWRITEDELAY;
+	    else 
+      {
+		    HardSID_Write(usehardsid-1, SIDWRITEDELAY, o, sidreg[o]);
+		    cycles -= SIDWRITEDELAY;
+	    }
     }
 
     // Now wait the rest of frame
@@ -369,7 +383,24 @@ int sound_thread(void *userdata)
       HardSID_Delay(usehardsid-1, runnow);
       cycles -= runnow;
     }
+
+  	if ((flush_cycles_interactive>0 && interactive && cycles_after_flush>=flush_cycles_interactive) ||
+		  (flush_cycles_playback>0 && !interactive && cycles_after_flush>=flush_cycles_playback)) 
+    {
+      if (HardSID_SoftFlush)
+        HardSID_SoftFlush(usehardsid-1);
+		  cycles_after_flush = 0;
+    }
   }
+
+  unsigned r;
+
+  for (r = 0; r < NUMSIDREGS; r++)
+  {
+    HardSID_Write(usehardsid-1, SIDWRITEDELAY, r, 0);
+  }
+  if (HardSID_SoftFlush)
+    HardSID_SoftFlush(usehardsid-1);
 
   return 0;
 }

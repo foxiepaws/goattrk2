@@ -1,7 +1,8 @@
-GoatTracker v2.66 Beta
-----------------------
+GoatTracker v2.67
+-----------------
 
 Editor by Lasse Öörni (loorni@gmail.com)
+HardSID 4U support by Téli Sándor.
 Uses reSID engine by Dag Lem.
 Uses 6510 crossassembler from Exomizer2 beta by Magnus Lind.
 Uses the SDL library.
@@ -23,16 +24,17 @@ Table of contents
 
 2. Using GoatTracker
 2.1 Command line options
-2.2 Keyboard commands
-2.2.1 General keys
-2.2.2 Pattern edit mode
-2.2.2.1 Protracker note-entry mode
-2.2.2.2 DMC note-entry mode
-2.2.3 Song edit mode
-2.2.4 Instrument edit mode
-2.2.5 Table edit mode
-2.2.6 Songname edit mode
-2.3 Mouse control
+2.2 Hardware support
+2.3 Keyboard commands
+2.3.1 General keys
+2.3.2 Pattern edit mode
+2.3.2.1 Protracker note-entry mode
+2.3.2.2 DMC note-entry mode
+2.3.3 Song edit mode
+2.3.4 Instrument edit mode
+2.3.5 Table edit mode
+2.3.6 Songname edit mode
+2.4 Mouse control
 
 3. Song data
 3.1 Orderlist data
@@ -198,6 +200,10 @@ model 8580 and to load "dojo.sng" on startup.
 /Oxx Set pulse optimization/skipping (0 = off, 1 = on) DEFAULT=on
 /Rxx Set realtime command optimization/skipping (0 = off, 1 = on) DEFAULT=on
 /Sxx Set speed multiplier (0 for 25Hz, 1 for 1x, 2 for 2x etc.)
+/Txx Set HardSID interactive mode sound buffer length in milliseconds
+     DEFAULT=20, max.buffering=0
+/Uxx Set HardSID playback mode sound buffer length in milliseconds
+     DEFAULT=400, max.buffering=0
 /Vxx Set finevibrato conversion (0 = off, 1 = on) DEFAULT=on
 /Zxx Set random reSID write delay in cycles (0 = off) DEFAULT=off
 /N   Use NTSC timing
@@ -211,19 +217,6 @@ seems to have trouble with some soundcards under Windows; you might want to
 try even a 500ms buffer, or tweak the hardware acceleration level of the
 soundcard (from Control Panel). Also, reSID interpolation will take remarkably
 more CPU time and could cause the sound and/or editing to get choppy.
-
-HardSID support is available with the /H option (use first HardSID = /H1,
-second = /H2 etc., return to emulated output = /H0). You must have the HardSID
-drivers installed to use this feature.
-
-CatWeasel MK3 PCI SID support is available with /C option (/C1 to turn on).
-
-To use the PC64 cable, you need Daniel Illgen's HardSID-DLL-Clone. Available at
-http://dawork.synchronus.de/
-
-To enable better support of multispeeds and cycle-exact timing on HardSID 
-(currently win32 only) download the enhanced HardSID.dll from
-http://sourceforge.net/project/showfiles.php?group_id=9266&release_id=61843
 
 Finevibrato mode is on by default. You can change this behaviour with /V
 option. Note that finevibrato mode only affects the conversion of old style
@@ -250,7 +243,40 @@ alternative playroutine, where waveform is written before ADSR. This can give
 more reliable note triggering, but may change the characteristics of the note's
 decay & release.
 
-2.2 Keyboard commands
+2.2 Hardware support
+--------------------
+
+HardSID support is available with the /H option (use first HardSID = /H1,
+second = /H2 etc., return to emulated output = /H0). You must have the HardSID
+drivers installed to use this feature.
+
+CatWeasel MK3 PCI SID support is available with /C option (/C1 to turn on).
+
+To use the PC64 cable, you need Daniel Illgen's HardSID-DLL-Clone. Available at
+http://dawork.synchronus.de/
+
+To enable better support of multispeeds and cycle-exact timing on HardSID
+(currently Win32 only), download an enhanced HardSID.dll:
+
+For HardSID ISA/PCI cards -
+http://sourceforge.net/project/showfiles.php?group_id=9266&release_id=61843
+
+For HardSID 4U -
+http://www.hardsid.com
+
+Cycle-exact HardSID buffer length is separately configurable for interactive
+mode (/T option) & playback mode (/U option).
+
+HardSID interactive mode:
+Low latency mode for jamming and accurate GUI display. Interactive mode can
+be activated during song/pattern playback by enabling jamming (space key).
+
+HardSID playback mode:
+High stability mode to avoid interruptions caused by other applications/poor
+drivers/weaker CPU. GUI display is less accurate in this mode. Set the /U
+parameter to zero to achieve the maximum stability (less accurate GUI).
+
+2.3 Keyboard commands
 ---------------------
 
 This program is mainly operated on keyboard. For a list of keyboard commands
@@ -259,7 +285,7 @@ press F12 (online help) in the tracker or see the table below:
 NOTE: SHIFT & CTRL are interchangeable in the commands. You can also use [ ]
 or ( ) instead of < >.
 
-2.2.1 General keys
+2.3.1 General keys
 ------------------
 
 F1        Play from beginning
@@ -290,7 +316,7 @@ DEL       Delete row
 SHIFT+ESC Optimize musicdata, or clear musicdata & set default pattern length
 ESC       Exit program
 
-2.2.2 Pattern edit mode
+2.3.2 Pattern edit mode
 -----------------------
 
 - +         Select instrument
@@ -341,7 +367,7 @@ the current pattern.
 
 There are 2 modes for note entering:
 
-2.2.2.1 Protracker note-entry mode
+2.3.2.1 Protracker note-entry mode
 ----------------------------------
 
 This is the default or activated with command line option /K0. There are two
@@ -359,7 +385,7 @@ the color of the jam/editmode indicator)
 GREEN - Advance when entering notes & command-databytes
 RED - Do not advance automatically
 
-2.2.2.2 DMC note-entry mode
+2.3.2.2 DMC note-entry mode
 ---------------------------
 
 Activated with command line option /K1, there is one row of piano keyboard
@@ -376,7 +402,7 @@ GREEN - Advance when entering notes, octaves or command-databytes
 YELLOW - Advance when entering notes or command-databytes, not octaves
 RED - Do not advance automatically
 
-2.2.3 Song edit mode
+2.3.3 Song edit mode
 --------------------
 
 < >         Select subtune
@@ -397,7 +423,7 @@ SHIFT+SPACE or SHIFT+BACKSPACE set the start/end mark on all channels to
 the same position. To clear the endmark, press BACKSPACE again on it or
 at/before the startmark.
 
-2.2.4 Instrument edit mode
+2.3.4 Instrument edit mode
 --------------------------
 
 < >         Select instrument
@@ -435,7 +461,7 @@ nybble depth) and converted to a speedtable entry.
 "Smart paste" will convert instrument numbers in all patterns if you "move" an
 instrument by cut/pasting it.
 
-2.2.5 Table edit mode
+2.3.5 Table edit mode
 ---------------------
 
 < >         Select instrument
@@ -472,13 +498,13 @@ When table scrolling is unlocked, each table maintains its separate view
 position. To indicate this mode, a "U" letter is visible in the bottom right
 part of the screen. By default table scrolling is locked.
 
-2.2.6 Songname edit mode
+2.3.6 Songname edit mode
 ------------------------
 
 Use cursor UP/DOWN to move between song, author & copyright strings, and
 other keys to edit them.
 
-2.3 Mouse control
+2.4 Mouse control
 -----------------
 
 By clicking with the left mouse button, you can select the data to edit.
@@ -1796,4 +1822,7 @@ v2.65     - Fixed raw keycodes over 511 interpreted as some other keys in the
 
 v2.66Beta - Initial cycle-exact HardSID support (Win32 only)
           - Permit running without sound.
+          
+v2.67     - Configurable cycle-exact HardSID buffer length (separate for inter-
+            active and playback mode, see /T and /U command line options)  
 
