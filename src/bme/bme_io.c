@@ -232,7 +232,7 @@ int io_lseek(int index, int offset, int whence)
 
 // Returns number of bytes actually read, -1 on error
 
-int io_read(int index, char *buffer, int length)
+int io_read(int index, void *buffer, int length)
 {
     if (!io_usedatafile)
     {

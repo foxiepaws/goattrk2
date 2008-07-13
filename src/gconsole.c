@@ -12,19 +12,19 @@
 int gfxinitted = 0;
 unsigned *scrbuffer = NULL;
 unsigned *prevscrbuffer = NULL;
-char *chardata = NULL;
+unsigned char *chardata = NULL;
 int key = 0;
 int rawkey = 0;
 int shiftpressed = 0;
 int cursorflashdelay = 0;
 int mouseb = 0;
 int prevmouseb = 0;
-int mousex = 0;
-int mousey = 0;
-int mousepixelx = 0;
-int mousepixely = 0;
-int oldmousepixelx = -1;
-int oldmousepixely = -1;
+unsigned mousex = 0;
+unsigned mousey = 0;
+unsigned mousepixelx = 0;
+unsigned mousepixely = 0;
+unsigned oldmousepixelx = 0xffffffff;
+unsigned oldmousepixely = 0xffffffff;
 int mouseheld = 0;
 int region[MAX_ROWS];
 

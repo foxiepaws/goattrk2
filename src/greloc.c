@@ -84,10 +84,10 @@ struct membuf dest = STATIC_MEMBUF_INIT;
 
 void relocator(void)
 {
-  unsigned char packedsongname[MAX_FILENAME];
-  unsigned char packedfilter[MAX_FILENAME];
+  char packedsongname[MAX_FILENAME];
+  char packedfilter[MAX_FILENAME];
   unsigned char *packeddata = NULL;
-  unsigned char *playername = "player.s";
+  char *playername = "player.s";
 
   int tableerrortype = TYPE_NONE;
   int tableerrorcause = CAUSE_NONE;

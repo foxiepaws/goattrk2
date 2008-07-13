@@ -68,7 +68,7 @@ typedef struct
   unsigned char vibdelay;
   unsigned char gatetimer;
   unsigned char firstwave;
-  unsigned char name[MAX_INSTRNAMELEN];
+  char name[MAX_INSTRNAMELEN];
 } INSTR;
 
 #endif

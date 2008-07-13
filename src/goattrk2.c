@@ -39,9 +39,9 @@ int exitprogram = 0;
 int eacolumn = 0;
 int eamode = 0;
 
-int keypreset = KEY_TRACKER;
-int playerversion = 0;
-int fileformat = FORMAT_PRG;
+unsigned keypreset = KEY_TRACKER;
+unsigned playerversion = 0;
+unsigned fileformat = FORMAT_PRG;
 int zeropageadr = 0xfc;
 int playeradr = 0x1000;
 unsigned sidmodel = 0;
@@ -67,14 +67,14 @@ unsigned hardsidbufplayback = 400;
 
 char *configptr;
 char configbuf[MAX_PATHNAME];
-unsigned char loadedsongfilename[MAX_FILENAME];
-unsigned char songfilename[MAX_FILENAME];
-unsigned char songfilter[MAX_FILENAME];
-unsigned char songpath[MAX_PATHNAME];
-unsigned char instrfilename[MAX_FILENAME];
-unsigned char instrfilter[MAX_FILENAME];
-unsigned char instrpath[MAX_PATHNAME];
-unsigned char packedpath[MAX_PATHNAME];
+char loadedsongfilename[MAX_FILENAME];
+char songfilename[MAX_FILENAME];
+char songfilter[MAX_FILENAME];
+char songpath[MAX_PATHNAME];
+char instrfilename[MAX_FILENAME];
+char instrfilter[MAX_FILENAME];
+char instrpath[MAX_PATHNAME];
+char packedpath[MAX_PATHNAME];
 
 char *programname = "GoatTracker v2.67";
                                       
@@ -114,11 +114,11 @@ int main(int argc, char **argv)
     getparam(configfile, &sidmodel);
     getparam(configfile, &ntsc);
     getparam(configfile, &fileformat);
-    getparam(configfile, &playeradr);
-    getparam(configfile, &zeropageadr);
+    getparam(configfile, (unsigned *)&playeradr);
+    getparam(configfile, (unsigned *)&zeropageadr);
     getparam(configfile, &playerversion);
     getparam(configfile, &keypreset);
-    getparam(configfile, &stepsize);
+    getparam(configfile, (unsigned *)&stepsize);
     getparam(configfile, &multiplier);
     getparam(configfile, &catweasel);
     getparam(configfile, &adparam);
@@ -1224,7 +1224,7 @@ void editadsr(void)
   }
 }
 
-void getparam(FILE *handle, int *value)
+void getparam(FILE *handle, unsigned *value)
 {
   for (;;)
   {
