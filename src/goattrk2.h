@@ -56,7 +56,7 @@ extern int eacolumn;
 extern int eamode;
 extern unsigned keypreset;
 extern unsigned playerversion;
-extern unsigned fileformat;
+extern int fileformat;
 extern int zeropageadr;
 extern int playeradr;
 extern unsigned sidmodel;

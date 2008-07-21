@@ -41,7 +41,7 @@ int eamode = 0;
 
 unsigned keypreset = KEY_TRACKER;
 unsigned playerversion = 0;
-unsigned fileformat = FORMAT_PRG;
+int fileformat = FORMAT_PRG;
 int zeropageadr = 0xfc;
 int playeradr = 0x1000;
 unsigned sidmodel = 0;
@@ -113,7 +113,7 @@ int main(int argc, char **argv)
     getparam(configfile, &hardsid);
     getparam(configfile, &sidmodel);
     getparam(configfile, &ntsc);
-    getparam(configfile, &fileformat);
+    getparam(configfile, (unsigned *)&fileformat);
     getparam(configfile, (unsigned *)&playeradr);
     getparam(configfile, (unsigned *)&zeropageadr);
     getparam(configfile, &playerversion);
