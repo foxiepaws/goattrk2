@@ -821,16 +821,6 @@ mt_newnoteinit:
                 beq mt_nonewnoteinit
               .ENDIF
 
-                lda mt_insad-1,y                ;Load Attack/Decay
-              .IF (BUFFEREDWRITES == 0)
-                sta SIDBASE+$05,x
-              .ELSE
-              .IF (ZPGHOSTREGS == 0)
-                sta mt_chnad,x
-              .ELSE
-                sta <ghostad,x
-              .ENDIF
-              .ENDIF
                 lda mt_inssr-1,y                ;Load Sustain/Release
               .IF (BUFFEREDWRITES == 0)
                 sta SIDBASE+$06,x
@@ -841,27 +831,20 @@ mt_newnoteinit:
                 sta <ghostsr,x
               .ENDIF
               .ENDIF
-              
-              .IF (NOPULSE == 0)
-                lda mt_inspulseptr-1,y          ;Load pulseptr (if nonzero)
-                beq mt_skippulse
-                sta mt_chnpulseptr,x
-              .IF (NOPULSEMOD == 0)
-                lda #$00                        ;Reset pulse step duration
-                sta mt_chnpulsetime,x
+                lda mt_insad-1,y                ;Load Attack/Decay
+              .IF (BUFFEREDWRITES == 0)
+                sta SIDBASE+$05,x
+              .ELSE
+              .IF (ZPGHOSTREGS == 0)
+                sta mt_chnad,x
+              .ELSE
+                sta <ghostad,x
               .ENDIF
               .ENDIF
-mt_skippulse:
-              .IF (NOFILTER == 0)
-                lda mt_insfiltptr-1,y         ;Load filtptr (if nonzero)
-                beq mt_skipfilt
-                sta mt_filtstep+1
-              .IF (NOFILTERMOD == 0)
-                lda #$00
-                sta mt_filttime+1
-              .ENDIF
-              .ENDIF
-mt_skipfilt:
+
+                lda mt_inswaveptr-1,y           ;Load waveptr
+                sta mt_chnwaveptr,x              
+
               .IF (FIXEDPARAMS == 0)
                 lda mt_insfirstwave-1,y         ;Load first frame waveform
               .IF (NOFIRSTWAVECMD == 0)
@@ -873,6 +856,9 @@ mt_skipfilt:
                 lda #FIRSTWAVEPARAM
               .ENDIF
                 sta mt_chnwave,x
+              .IF (BUFFEREDWRITES == 0)
+                sta SIDBASE+$04,x 
+              .ENDIF               
               .IF ((NUMLEGATOINSTR > 0) || (NOFIRSTWAVECMD == 0))
                 lda #$ff
 mt_skipwave2:
@@ -880,15 +866,44 @@ mt_skipwave2:
               .ELSE
                 inc mt_chngate,x
               .ENDIF
-mt_skipwave:
-                lda mt_inswaveptr-1,y           ;Load waveptr
-                sta mt_chnwaveptr,x
+mt_skipwave:                        
+              .IF (NOPULSE == 0)
+                lda mt_inspulseptr-1,y          ;Load pulseptr (if nonzero)
+                beq mt_skippulse
+                sta mt_chnpulseptr,x
+              .IF (NOPULSEMOD == 0)
+                lda #$00                        ;Reset pulse step duration
+                sta mt_chnpulsetime,x
+              .ENDIF
+              .ENDIF
+mt_skippulse:
+              .IF (NOFILTER == 0)
+                lda mt_insfiltptr-1,y           ;Load filtptr (if nonzero)
+                beq mt_skipfilt
+                sta mt_filtstep+1
+              .IF (NOFILTERMOD == 0)
+                lda #$00
+                sta mt_filttime+1
+              .ENDIF
+              .ENDIF
+mt_skipfilt:
               .IF (NOEFFECTS == 0)
                 lda mt_chnnewparam,x            ;Execute tick 0 FX after
+              .IF (BUFFEREDWRITES == 0)         ;newnote init
 mt_tick0jump1:
-                jsr mt_tick0_0                  ;newnote init
+                jmp mt_tick0_0                  
+              .ELSE
+mt_tick0jump1:
+                jsr mt_tick0_0
+                jmp mt_loadregs                               
               .ENDIF
+              .ELSE
+              .IF (BUFFEREDWRITES == 0)
+                rts
+              .ELSE                            
                 jmp mt_loadregs
+              .ENDIF
+              .ENDIF
 
               .IF (NOWAVECMD == 0)
 mt_wavecmd:
@@ -1289,7 +1304,17 @@ mt_normalnote:
               .ENDIF
               .ENDIF
               .IF (NUMHRINSTR > 0)
-                lda #ADPARAM                ;Hard restart
+                lda #SRPARAM                ;Hard restart 
+              .IF (BUFFEREDWRITES == 0)
+                sta SIDBASE+$06,x
+              .ELSE
+              .IF (ZPGHOSTREGS == 0)
+                sta mt_chnsr,x
+              .ELSE
+                sta <ghostsr,x
+              .ENDIF
+              .ENDIF                
+                lda #ADPARAM                 
               .IF (BUFFEREDWRITES == 0)
                 sta SIDBASE+$05,x
               .ELSE
@@ -1299,16 +1324,7 @@ mt_normalnote:
                 sta <ghostad,x
               .ENDIF
               .ENDIF
-                lda #SRPARAM                
-              .IF (BUFFEREDWRITES == 0)
-                sta SIDBASE+$06,x
-              .ELSE
-              .IF (ZPGHOSTREGS == 0)
-                sta mt_chnsr,x
-              .ELSE
-                sta <ghostsr,x
-              .ENDIF
-              .ENDIF              
+            
               .ENDIF
 mt_skiphr:
                 lda #$fe
@@ -1400,8 +1416,8 @@ mt_sfxexec:     lda mt_chnsfxlo,x
                 cpy #$02
                 beq mt_sfxexec_frame0
                 bcs mt_sfxexec_framen
-                sta SIDBASE+$05,x                ;Hardrestart before sound FX
-                sta SIDBASE+$06,x                ;begins
+                sta SIDBASE+$06,x                ;Hardrestart before sound FX
+                sta SIDBASE+$05,x                ;begins
                 bcc mt_loadregswavefreq
 mt_sfxexec_frame0:
                 tay

@@ -1834,6 +1834,7 @@ v2.66Beta - Initial cycle-exact HardSID support (Win32 only)
 v2.67     - Configurable cycle-exact HardSID buffer length (separate for inter-
             active and playback mode, see /T and /U command line options)  
             
-v2.68     - SID register write order tweaked to resemble JCH NewPlayer 21
-            (buffered mode only).
+v2.68     - SID register write order tweaked to resemble JCH NewPlayer 21.
+          - Unbuffered playroutine optimized & modified to resemble buffered
+            mode timing more.
 
