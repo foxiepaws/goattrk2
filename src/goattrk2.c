@@ -61,7 +61,7 @@ unsigned writer = 0;
 unsigned hardsid = 0;
 unsigned catweasel = 0;
 unsigned interpolate = 0;
-unsigned residdelay = 40;
+unsigned residdelay = 0;
 unsigned hardsidbufinteractive = 20;
 unsigned hardsidbufplayback = 400;
 
@@ -176,7 +176,7 @@ int main(int argc, char **argv)
         printtext(0,y++,15,"/Txx Set HardSID interactive mode sound buffer length in milliseconds DEFAULT=20, max.buffering=0");
         printtext(0,y++,15,"/Uxx Set HardSID playback mode sound buffer length in milliseconds DEFAULT=400, max.buffering=0");
         printtext(0,y++,15,"/Vxx Set finevibrato conversion (0 = off, 1 = on) DEFAULT=1");
-        printtext(0,y++,15,"/Zxx Set random reSID write delay in cycles (0 = off) DEFAULT=40");
+        printtext(0,y++,15,"/Zxx Set random reSID write delay in cycles (0 = off) DEFAULT=0");
         printtext(0,y++,15,"/N   Use NTSC timing");
         printtext(0,y++,15,"/P   Use PAL timing (DEFAULT)");
         printtext(0,y++,15,"/W   Write sound output to a file SIDAUDIO.RAW");
