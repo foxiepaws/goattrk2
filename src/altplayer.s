@@ -896,18 +896,18 @@ mt_skipfilt:
 
               .IF (NOEFFECTS == 0)
                 lda mt_chnnewparam,x            ;Execute tick 0 FX after
-mt_tick0jump1:
-              .IF (BUFFEREDWRITES != 0)
-                jsr mt_tick0_0                  ;newnote init
+mt_tick0jump1:                                  ;newnote init
+              .IF (BUFFEREDWRITES == 0)         
+                jmp mt_tick0_0                  
               .ELSE
-                jmp mt_tick0_0
+                jsr mt_tick0_0
+                jmp mt_loadregs                               
               .ENDIF
-              .ENDIF
-              .IF (BUFFEREDWRITES != 0)
-                jmp mt_loadregs
               .ELSE
-              .IF (NOEFFECTS != 0)
+              .IF (BUFFEREDWRITES == 0)
                 rts
+              .ELSE                            
+                jmp mt_loadregs
               .ENDIF
               .ENDIF
 

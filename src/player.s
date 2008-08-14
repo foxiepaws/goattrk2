@@ -889,11 +889,10 @@ mt_skippulse:
 mt_skipfilt:
               .IF (NOEFFECTS == 0)
                 lda mt_chnnewparam,x            ;Execute tick 0 FX after
-              .IF (BUFFEREDWRITES == 0)         ;newnote init
-mt_tick0jump1:
+mt_tick0jump1:                                  ;newnote init
+              .IF (BUFFEREDWRITES == 0)         
                 jmp mt_tick0_0                  
               .ELSE
-mt_tick0jump1:
                 jsr mt_tick0_0
                 jmp mt_loadregs                               
               .ENDIF
