@@ -1,5 +1,5 @@
 //
-// GOATTRACKER v2.67
+// GOATTRACKER v2.68
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -61,7 +61,7 @@ unsigned writer = 0;
 unsigned hardsid = 0;
 unsigned catweasel = 0;
 unsigned interpolate = 0;
-unsigned residdelay = 0;
+unsigned residdelay = 40;
 unsigned hardsidbufinteractive = 20;
 unsigned hardsidbufplayback = 400;
 
@@ -76,7 +76,7 @@ char instrfilter[MAX_FILENAME];
 char instrpath[MAX_PATHNAME];
 char packedpath[MAX_PATHNAME];
 
-char *programname = "GoatTracker v2.67";
+char *programname = "GoatTracker v2.68";
                                       
 char textbuffer[MAX_PATHNAME];
 
@@ -176,7 +176,7 @@ int main(int argc, char **argv)
         printtext(0,y++,15,"/Txx Set HardSID interactive mode sound buffer length in milliseconds DEFAULT=20, max.buffering=0");
         printtext(0,y++,15,"/Uxx Set HardSID playback mode sound buffer length in milliseconds DEFAULT=400, max.buffering=0");
         printtext(0,y++,15,"/Vxx Set finevibrato conversion (0 = off, 1 = on) DEFAULT=1");
-        printtext(0,y++,15,"/Zxx Set random reSID write delay in cycles (0 = off) DEFAULT=off");
+        printtext(0,y++,15,"/Zxx Set random reSID write delay in cycles (0 = off) DEFAULT=40");
         printtext(0,y++,15,"/N   Use NTSC timing");
         printtext(0,y++,15,"/P   Use PAL timing (DEFAULT)");
         printtext(0,y++,15,"/W   Write sound output to a file SIDAUDIO.RAW");

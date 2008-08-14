@@ -1,5 +1,5 @@
 ;-------------------------------------------------------------------------------
-; GoatTracker V2.63 playroutine
+; GoatTracker V2.68 playroutine
 ;
 ; NOTE: This playroutine source code does not fall under the GPL license!
 ; Use it, or song binaries created from it freely for any purpose, commercial
@@ -821,16 +821,6 @@ mt_newnoteinit:
                 beq mt_nonewnoteinit
               .ENDIF
 
-                lda mt_insad-1,y                ;Load Attack/Decay
-              .IF (BUFFEREDWRITES == 0)
-                sta SIDBASE+$05,x
-              .ELSE
-              .IF (ZPGHOSTREGS == 0)
-                sta mt_chnad,x
-              .ELSE
-                sta <ghostad,x
-              .ENDIF
-              .ENDIF
                 lda mt_inssr-1,y                ;Load Sustain/Release
               .IF (BUFFEREDWRITES == 0)
                 sta SIDBASE+$06,x
@@ -839,6 +829,16 @@ mt_newnoteinit:
                 sta mt_chnsr,x
               .ELSE
                 sta <ghostsr,x
+              .ENDIF
+              .ENDIF
+                lda mt_insad-1,y                ;Load Attack/Decay
+              .IF (BUFFEREDWRITES == 0)
+                sta SIDBASE+$05,x
+              .ELSE
+              .IF (ZPGHOSTREGS == 0)
+                sta mt_chnad,x
+              .ELSE
+                sta <ghostad,x
               .ENDIF
               .ENDIF
 
@@ -1289,17 +1289,7 @@ mt_normalnote:
               .ENDIF
               .ENDIF
               .IF (NUMHRINSTR > 0)
-                lda #ADPARAM                ;Hard restart
-              .IF (BUFFEREDWRITES == 0)
-                sta SIDBASE+$05,x
-              .ELSE
-              .IF (ZPGHOSTREGS == 0)
-                sta mt_chnad,x
-              .ELSE
-                sta <ghostad,x
-              .ENDIF
-              .ENDIF
-                lda #SRPARAM
+                lda #SRPARAM                ;Hard restart
               .IF (BUFFEREDWRITES == 0)
                 sta SIDBASE+$06,x
               .ELSE
@@ -1307,6 +1297,16 @@ mt_normalnote:
                 sta mt_chnsr,x
               .ELSE
                 sta <ghostsr,x
+              .ENDIF
+              .ENDIF
+                lda #ADPARAM               
+              .IF (BUFFEREDWRITES == 0)
+                sta SIDBASE+$05,x
+              .ELSE
+              .IF (ZPGHOSTREGS == 0)
+                sta mt_chnad,x
+              .ELSE
+                sta <ghostad,x
               .ENDIF
               .ENDIF
               .ENDIF
@@ -1343,10 +1343,6 @@ mt_loadregswaveonly:
                 bne mt_sfxexec
               .ENDIF
               .IF (ZPGHOSTREGS == 0)
-                lda mt_chnad,x
-                sta SIDBASE+$05,x
-                lda mt_chnsr,x
-                sta SIDBASE+$06,x
                 lda mt_chnpulselo,x
               .IF (SIMPLEPULSE == 0)
                 sta SIDBASE+$02,x
@@ -1356,6 +1352,10 @@ mt_loadregswaveonly:
                 sta SIDBASE+$02,x
                 sta SIDBASE+$03,x
               .ENDIF
+                lda mt_chnsr,x
+                sta SIDBASE+$06,x              
+                lda mt_chnad,x
+                sta SIDBASE+$05,x
 mt_loadregswavefreq:
                 lda mt_chnfreqlo,x
                 sta SIDBASE+$00,x
@@ -1400,8 +1400,8 @@ mt_sfxexec:     lda mt_chnsfxlo,x
                 cpy #$02
                 beq mt_sfxexec_frame0
                 bcs mt_sfxexec_framen
-                sta SIDBASE+$05,x                ;Hardrestart before sound FX
-                sta SIDBASE+$06,x                ;begins
+                sta SIDBASE+$06,x                ;Hardrestart before sound FX
+                sta SIDBASE+$05,x                ;begins
                 bcc mt_loadregswavefreq
 mt_sfxexec_frame0:
                 tay

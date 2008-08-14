@@ -1,4 +1,4 @@
-GoatTracker v2.67
+GoatTracker v2.68
 -----------------
 
 Editor by Lasse Öörni (loorni@gmail.com)
@@ -13,6 +13,9 @@ Distributed under GNU General Public License
 
 Covert BitOps homepage:
 http://covertbitops.c64.org
+
+GoatTracker 2 SourceForge.net page:
+http://sourceforge.net/projects/goattracker2
 
 
 Table of contents
@@ -161,6 +164,11 @@ for Win32 platform.
    table left side. Naturally, this means that very high portamento speeds (>=
    $8000) or vibrato speeds (>= $80) become unavailable, but these should not 
    be very useful anyway.
+   
+12. From v2.68 onwards, SID write order has been tweaked for better stability
+   regarding badlines. This has the consequence, however, that notes with 
+   attack 0 & release 1 may ADSR-bug. In this case, try hardrestart attack 
+   parameter $F for alternative SID register write order.
 
 1.2 Compatibility with v1.xx
 ----------------------------
@@ -240,8 +248,8 @@ the note start very pronounced.
 
 Hard restart parameter with attack at maximum (F) enables the use of an
 alternative playroutine, where waveform is written before ADSR. This can give
-more reliable note triggering, but may change the characteristics of the note's
-decay & release.
+more reliable note triggering, especially for very fast releases 0 & 1, but 
+may change the characteristics of the note's decay & release.
 
 2.2 Hardware support
 --------------------
@@ -1825,4 +1833,8 @@ v2.66Beta - Initial cycle-exact HardSID support (Win32 only)
           
 v2.67     - Configurable cycle-exact HardSID buffer length (separate for inter-
             active and playback mode, see /T and /U command line options)  
+            
+v2.68     - SID register write order tweaked to resemble JCH NewPlayer 21.
+          - reSID random write delay 40 cycles (simulating a badline) by 
+            default.
 
