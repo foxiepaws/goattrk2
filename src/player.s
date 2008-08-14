@@ -821,16 +821,6 @@ mt_newnoteinit:
                 beq mt_nonewnoteinit
               .ENDIF
 
-                lda mt_inssr-1,y                ;Load Sustain/Release
-              .IF (BUFFEREDWRITES == 0)
-                sta SIDBASE+$06,x
-              .ELSE
-              .IF (ZPGHOSTREGS == 0)
-                sta mt_chnsr,x
-              .ELSE
-                sta <ghostsr,x
-              .ENDIF
-              .ENDIF
                 lda mt_insad-1,y                ;Load Attack/Decay
               .IF (BUFFEREDWRITES == 0)
                 sta SIDBASE+$05,x
@@ -841,7 +831,17 @@ mt_newnoteinit:
                 sta <ghostad,x
               .ENDIF
               .ENDIF
-
+                lda mt_inssr-1,y                ;Load Sustain/Release
+              .IF (BUFFEREDWRITES == 0)
+                sta SIDBASE+$06,x
+              .ELSE
+              .IF (ZPGHOSTREGS == 0)
+                sta mt_chnsr,x
+              .ELSE
+                sta <ghostsr,x
+              .ENDIF
+              .ENDIF
+              
               .IF (NOPULSE == 0)
                 lda mt_inspulseptr-1,y          ;Load pulseptr (if nonzero)
                 beq mt_skippulse
@@ -1289,17 +1289,7 @@ mt_normalnote:
               .ENDIF
               .ENDIF
               .IF (NUMHRINSTR > 0)
-                lda #SRPARAM                ;Hard restart
-              .IF (BUFFEREDWRITES == 0)
-                sta SIDBASE+$06,x
-              .ELSE
-              .IF (ZPGHOSTREGS == 0)
-                sta mt_chnsr,x
-              .ELSE
-                sta <ghostsr,x
-              .ENDIF
-              .ENDIF
-                lda #ADPARAM               
+                lda #ADPARAM                ;Hard restart
               .IF (BUFFEREDWRITES == 0)
                 sta SIDBASE+$05,x
               .ELSE
@@ -1309,6 +1299,16 @@ mt_normalnote:
                 sta <ghostad,x
               .ENDIF
               .ENDIF
+                lda #SRPARAM                
+              .IF (BUFFEREDWRITES == 0)
+                sta SIDBASE+$06,x
+              .ELSE
+              .IF (ZPGHOSTREGS == 0)
+                sta mt_chnsr,x
+              .ELSE
+                sta <ghostsr,x
+              .ENDIF
+              .ENDIF              
               .ENDIF
 mt_skiphr:
                 lda #$fe
@@ -1400,8 +1400,8 @@ mt_sfxexec:     lda mt_chnsfxlo,x
                 cpy #$02
                 beq mt_sfxexec_frame0
                 bcs mt_sfxexec_framen
-                sta SIDBASE+$06,x                ;Hardrestart before sound FX
-                sta SIDBASE+$05,x                ;begins
+                sta SIDBASE+$05,x                ;Hardrestart before sound FX
+                sta SIDBASE+$06,x                ;begins
                 bcc mt_loadregswavefreq
 mt_sfxexec_frame0:
                 tay
