@@ -821,6 +821,50 @@ mt_newnoteinit:
                 beq mt_nonewnoteinit
               .ENDIF
 
+              .IF (FIXEDPARAMS == 0)
+                lda mt_insfirstwave-1,y         ;Load first frame waveform
+              .IF (NOFIRSTWAVECMD == 0)
+                beq mt_skipwave
+                cmp #$fe
+                bcs mt_skipwave2                ;Skip waveform but load gate
+              .ENDIF
+              .ELSE
+                lda #FIRSTWAVEPARAM
+              .ENDIF
+                sta mt_chnwave,x
+              .IF ((NUMLEGATOINSTR > 0) || (NOFIRSTWAVECMD == 0))
+                lda #$ff
+mt_skipwave2:
+                sta mt_chngate,x                ;Reset gateflag
+              .ELSE
+                inc mt_chngate,x
+              .ENDIF
+mt_skipwave:   
+
+              .IF (NOPULSE == 0)
+                lda mt_inspulseptr-1,y          ;Load pulseptr (if nonzero)
+                beq mt_skippulse
+                sta mt_chnpulseptr,x
+              .IF (NOPULSEMOD == 0)
+                lda #$00                        ;Reset pulse step duration
+                sta mt_chnpulsetime,x
+              .ENDIF
+              .ENDIF
+mt_skippulse:
+              .IF (NOFILTER == 0)
+                lda mt_insfiltptr-1,y           ;Load filtptr (if nonzero)
+                beq mt_skipfilt
+                sta mt_filtstep+1
+              .IF (NOFILTERMOD == 0)
+                lda #$00
+                sta mt_filttime+1
+              .ENDIF
+              .ENDIF
+mt_skipfilt:
+
+                lda mt_inswaveptr-1,y           ;Load waveptr
+                sta mt_chnwaveptr,x
+
                 lda mt_inssr-1,y                ;Load Sustain/Release
               .IF (BUFFEREDWRITES == 0)
                 sta SIDBASE+$06,x
@@ -842,66 +886,15 @@ mt_newnoteinit:
               .ENDIF
               .ENDIF
 
-                lda mt_inswaveptr-1,y           ;Load waveptr
-                sta mt_chnwaveptr,x              
-
-              .IF (FIXEDPARAMS == 0)
-                lda mt_insfirstwave-1,y         ;Load first frame waveform
-              .IF (NOFIRSTWAVECMD == 0)
-                beq mt_skipwave
-                cmp #$fe
-                bcs mt_skipwave2                ;Skip waveform but load gate
-              .ENDIF
-              .ELSE
-                lda #FIRSTWAVEPARAM
-              .ENDIF
-                sta mt_chnwave,x
-              .IF (BUFFEREDWRITES == 0)
-                sta SIDBASE+$04,x 
-              .ENDIF               
-              .IF ((NUMLEGATOINSTR > 0) || (NOFIRSTWAVECMD == 0))
-                lda #$ff
-mt_skipwave2:
-                sta mt_chngate,x                ;Reset gateflag
-              .ELSE
-                inc mt_chngate,x
-              .ENDIF
-mt_skipwave:                        
-              .IF (NOPULSE == 0)
-                lda mt_inspulseptr-1,y          ;Load pulseptr (if nonzero)
-                beq mt_skippulse
-                sta mt_chnpulseptr,x
-              .IF (NOPULSEMOD == 0)
-                lda #$00                        ;Reset pulse step duration
-                sta mt_chnpulsetime,x
-              .ENDIF
-              .ENDIF
-mt_skippulse:
-              .IF (NOFILTER == 0)
-                lda mt_insfiltptr-1,y           ;Load filtptr (if nonzero)
-                beq mt_skipfilt
-                sta mt_filtstep+1
-              .IF (NOFILTERMOD == 0)
-                lda #$00
-                sta mt_filttime+1
-              .ENDIF
-              .ENDIF
-mt_skipfilt:
               .IF (NOEFFECTS == 0)
                 lda mt_chnnewparam,x            ;Execute tick 0 FX after
 mt_tick0jump1:                                  ;newnote init
-              .IF (BUFFEREDWRITES == 0)         
-                jmp mt_tick0_0                  
-              .ELSE
                 jsr mt_tick0_0
-                jmp mt_loadregs                               
               .ENDIF
-              .ELSE
               .IF (BUFFEREDWRITES == 0)
-                rts
-              .ELSE                            
+                jmp mt_loadregswaveonly
+              .ELSE
                 jmp mt_loadregs
-              .ENDIF
               .ENDIF
 
               .IF (NOWAVECMD == 0)
