@@ -328,8 +328,12 @@ mt_tick0_f:
 mt_tick0_f_setglobaltempo:
               .IF (NOGLOBALTEMPO == 0)
                 sta mt_chntempo
+              .IF (NUMCHANNELS > 1)
                 sta mt_chntempo+7
+              .ENDIF
+              .IF (NUMCHANNELS > 2)
                 sta mt_chntempo+14
+              .ENDIF
                 rts
               .ENDIF
 mt_tick0_f_setchantempo:
