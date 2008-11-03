@@ -7,6 +7,7 @@ Uses reSID engine by Dag Lem.
 Uses 6510 crossassembler from Exomizer2 beta by Magnus Lind.
 Uses the SDL library.
 GoatTracker icon by Antonio Vera.
+Command quick reference by Simon Bennett.
 
 Distributed under GNU General Public License
 (see the file COPYING for details)
