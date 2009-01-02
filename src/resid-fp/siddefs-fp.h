@@ -17,16 +17,21 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //  ---------------------------------------------------------------------------
 
-#ifndef __SIDDEFS_H__
-#define __SIDDEFS_H__
+#ifndef __SIDDEFS_FP_H__
+#define __SIDDEFS_FP_H__
 
-// Define bool, true, and false for C++ compilers that lack these keywords.
-#define RESID_HAVE_BOOL 1
+#ifndef M_PI
+#define M_PI    3.14159265358979323846
+#define M_PI_f  3.14159265358979323846f
+#else
+#define M_PI_f  ((float) M_PI)
+#endif
 
-#if !RESID_HAVE_BOOL
-typedef int bool;
-const bool true = 1;
-const bool false = 0;
+#ifndef M_LN2
+#define M_LN2   0.69314718055994530942
+#define M_LN2_f 0.69314718055994530942f
+#else
+#define M_LN2_f ((float) M_LN2)
 #endif
 
 // We could have used the smallest possible data type for each SID register,
@@ -43,10 +48,8 @@ typedef unsigned int reg16;
 typedef unsigned int reg24;
 
 typedef int cycle_count;
-typedef int sound_sample;
-typedef sound_sample fc_point[2];
 
-#ifndef __SIDDEFS_FP_H__
+#ifndef __SIDDEFS_H__
 
 enum chip_model { MOS6581, MOS8580, MOS6581FP, MOS8580FP };
 
@@ -64,8 +67,6 @@ const char* resid_version_string = VERSION;
 #endif
 }
 
-// Inlining on/off.
-#define RESID_INLINING 1
 #define RESID_INLINE inline
 
 #endif // not __SIDDEFS_H__

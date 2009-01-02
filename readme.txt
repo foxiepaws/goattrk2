@@ -4,6 +4,7 @@ GoatTracker v2.68
 Editor by Lasse Öörni (loorni@gmail.com)
 HardSID 4U support by Téli Sándor.
 Uses reSID engine by Dag Lem.
+Uses reSID distortion / nonlinearity by Antti Lankila.
 Uses 6510 crossassembler from Exomizer2 beta by Magnus Lind.
 Uses the SDL library.
 GoatTracker icon by Antonio Vera.
@@ -202,7 +203,7 @@ model 8580 and to load "dojo.sng" on startup.
 /Exx Set emulated SID model (0 = 6581 1 = 8580) DEFAULT=6581
 /Fxx Set custom SID clock cycles per second (0 = use PAL/NTSC default)
 /Hxx Use HardSID (0 = off, 1 = HardSID ID0 2 = HardSID ID1 etc.)
-/Ixx Set reSID interpolation (0 = off, 1 = on) DEFAULT=off
+/Ixx Set reSID interpolation (0 = off, 1 = on, 2 = distortion, 3 = distortion & on) DEFAULT=off
 /Kxx Note-entry mode (0 = PROTRACKER 1 = DMC) DEFAULT=PROTRK.
 /Lxx SID memory location in hex. DEFAULT=D400
 /Mxx Set sound mixing rate DEFAULT=44100
@@ -1837,7 +1838,11 @@ v2.67     - Configurable cycle-exact HardSID buffer length (separate for inter-
             
 v2.68     - Fixed set tempo -command overwriting frequencytable in 1 or 2
             channel modes.
-	  - SID register write order tweaked to resemble JCH NewPlayer 21.
+          - Fixed sound uninit crash with multicore processors (?)
+          - SID register write order tweaked to resemble JCH NewPlayer 21.
           - Unbuffered playroutine optimized & modified to resemble buffered
             mode timing more.
-	  
+          - New reSID-fp engine (with distortion & nonlinearity) from Antti
+            Lankila integrated. Activated with /I command line option parameters
+            2 & 3.
+          - Command quick reference by Simon Bennett included.

@@ -175,7 +175,7 @@ int sound_init(unsigned b, unsigned mr, unsigned writer, unsigned hardsid, unsig
     goto SOUNDOK;
   }
 
-  buffer = malloc(MIXBUFFERSIZE * sizeof(Sint16));
+  if (!buffer) buffer = malloc(MIXBUFFERSIZE * sizeof(Sint16));
   if (!buffer) return 0;
 
   if (writer)
@@ -193,14 +193,13 @@ int sound_init(unsigned b, unsigned mr, unsigned writer, unsigned hardsid, unsig
     firsttimeinit = 0;
   }
   playspeed = snd_mixrate;
-  sid_init(playspeed, m, ntsc, interpolate, customclockrate);
+  sid_init(playspeed, m, ntsc, interpolate & 1, customclockrate, interpolate >> 1);
 
   snd_player = &sound_playrout;
   snd_setcustommixer(sound_mixer);
 
   SOUNDOK:
   initted = 1;
-  atexit(sound_uninit);
   return 1;
 }
 
@@ -210,6 +209,10 @@ void sound_uninit(void)
 
   if (!initted) return;
   initted = 0;
+
+  // Apparently a delay is needed to make sure the sound timer thread is
+  // not mixing stuff anymore, and we can safely delete related structures
+  SDL_Delay(50);
 
   if (usehardsid || usecatweasel)
   {
@@ -239,11 +242,11 @@ void sound_uninit(void)
     fclose(writehandle);
     writehandle = NULL;
   }
-
+  
   if (buffer)
   {
-  	free(buffer);
-  	buffer = NULL;
+    free(buffer);
+    buffer = NULL;
   }
 
   if (usehardsid)
@@ -333,15 +336,15 @@ int sound_thread(void *userdata)
     unsigned cycles = 1000000 / framerate; // HardSID should be clocked at 1MHz
     int c;
 
-    if (flush_cycles_interactive > 0 || flush_cycles_playback > 0) 
+    if (flush_cycles_interactive > 0 || flush_cycles_playback > 0)
     {
       cycles_after_flush += cycles;
     }
 
-	  // Do flush if starting playback, stopping playback, starting an interactive note etc.
+    // Do flush if starting playback, stopping playback, starting an interactive note etc.
     if (flushplayerthread)
     {
-	    SDL_LockMutex(flushmutex);
+      SDL_LockMutex(flushmutex);
       if (HardSID_Flush)
       {
         HardSID_Flush(usehardsid-1);
@@ -368,7 +371,7 @@ int sound_thread(void *userdata)
         HardSID_Write(usehardsid-1, SIDWRITEDELAY+SIDWAVEDELAY, o, sidreg[o]);
   	    cycles -= SIDWRITEDELAY+SIDWAVEDELAY;
       }
-	    else 
+	    else
       {
 		    HardSID_Write(usehardsid-1, SIDWRITEDELAY, o, sidreg[o]);
 		    cycles -= SIDWRITEDELAY;
@@ -385,7 +388,7 @@ int sound_thread(void *userdata)
     }
 
   	if ((flush_cycles_interactive>0 && interactive && cycles_after_flush>=flush_cycles_interactive) ||
-		  (flush_cycles_playback>0 && !interactive && cycles_after_flush>=flush_cycles_playback)) 
+		  (flush_cycles_playback>0 && !interactive && cycles_after_flush>=flush_cycles_playback))
     {
       if (HardSID_SoftFlush)
         HardSID_SoftFlush(usehardsid-1);
@@ -460,6 +463,7 @@ void sound_mixer(Sint32 *dest, unsigned samples)
 
   if (!initted) return;
   if (samples > MIXBUFFERSIZE) return;
+  if (!buffer) return;
 
   sid_fillbuffer(buffer, samples);
   if (writehandle)

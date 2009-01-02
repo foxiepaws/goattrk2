@@ -16,38 +16,35 @@
 //  along with this program; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //  ---------------------------------------------------------------------------
-// C64 DTV modifications written by
-//   Daniel Kahlin <daniel@kahlin.net>
-// Copyright (C) 2007  Daniel Kahlin <daniel@kahlin.net>
 
-#ifndef __SID_H__
-#define __SID_H__
+#ifndef __SID_FP_H__
+#define __SID_FP_H__
 
-#include "siddefs.h"
+#include "siddefs-fp.h"
 #include "voice.h"
 #include "filter.h"
 #include "extfilt.h"
 #include "pot.h"
 
-class SID
+class SIDFP
 {
 public:
-  SID();
-  ~SID();
+  SIDFP();
+  ~SIDFP();
+
+  static float kinked_dac(const int x, const float nonlinearity, const int bits);
+  bool sse_enabled() { return can_use_sse; }
 
   void set_chip_model(chip_model model);
+  FilterFP& get_filter() { return filter; }
   void enable_filter(bool enable);
   void enable_external_filter(bool enable);
-  bool set_sampling_parameters(double clock_freq, sampling_method method,
-			       double sample_freq, double pass_freq = -1,
-			       double filter_scale = 0.97);
-  void adjust_sampling_frequency(double sample_freq);
-
-  void fc_default(const fc_point*& points, int& count);
-  PointPlotter<sound_sample> fc_plotter();
+  bool set_sampling_parameters(float clock_freq, sampling_method method,
+                               float sample_freq, float pass_freq = -1);
+  void adjust_sampling_frequency(float sample_freq);
+  void set_voice_nonlinearity(float nonlinearity);
 
   void clock();
-  void clock(cycle_count delta_t);
   int clock(cycle_count& delta_t, short* buf, int n, int interleave = 1);
   void reset();
   
@@ -73,7 +70,7 @@ public:
     reg16 exponential_counter[3];
     reg16 exponential_counter_period[3];
     reg8 envelope_counter[3];
-    EnvelopeGenerator::State envelope_state[3];
+    EnvelopeGeneratorFP::State envelope_state[3];
     bool hold_zero[3];
   };
     
@@ -83,69 +80,51 @@ public:
   // 16-bit input (EXT IN).
   void input(int sample);
 
-  // 16-bit output (AUDIO OUT).
-  int output();
-  // n-bit output.
-  int output(int bits);
+  // output in range -32768 .. 32767, not clipped (AUDIO OUT)
+  float output();
 
 protected:
   static double I0(double x);
-  RESID_INLINE int clock_fast(cycle_count& delta_t, short* buf, int n,
-			      int interleave);
   RESID_INLINE int clock_interpolate(cycle_count& delta_t, short* buf, int n,
-				     int interleave);
+                                     int interleave);
   RESID_INLINE int clock_resample_interpolate(cycle_count& delta_t, short* buf,
-					      int n, int interleave);
-  RESID_INLINE int clock_resample_fast(cycle_count& delta_t, short* buf,
-				       int n, int interleave);
+                                              int n, int interleave);
+  RESID_INLINE void age_bus_value(cycle_count);
 
-  Voice voice[3];
-  Filter filter;
-  ExternalFilter extfilt;
-  Potentiometer potx;
-  Potentiometer poty;
+  VoiceFP voice[3];
+  FilterFP filter;
+  ExternalFilterFP extfilt;
+  PotentiometerFP potx;
+  PotentiometerFP poty;
 
   reg8 bus_value;
   cycle_count bus_value_ttl;
 
-  double clock_frequency;
-
-  bool is_dtv;
+  float clock_frequency;
 
   // External audio input.
-  int ext_in;
+  float ext_in;
 
-  // Resampling constants.
-  // The error in interpolated lookup is bounded by 1.234/L^2,
-  // while the error in non-interpolated lookup is bounded by
-  // 0.7854/L + 0.4113/L^2, see
-  // http://www-ccrma.stanford.edu/~jos/resample/Choice_Table_Size.html
-  // For a resolution of 16 bits this yields L >= 285 and L >= 51473,
-  // respectively.
-  enum { FIR_N = 125 };
-  enum { FIR_RES_INTERPOLATE = 285 };
-  enum { FIR_RES_FAST = 51473 };
-  enum { FIR_SHIFT = 15 };
   enum { RINGSIZE = 16384 };
-
-  // Fixpoint constants (16.16 bits).
-  enum { FIXP_SHIFT = 16 };
-  enum { FIXP_MASK = 0xffff };
 
   // Sampling variables.
   sampling_method sampling;
-  cycle_count cycles_per_sample;
-  cycle_count sample_offset;
+  float cycles_per_sample;
+  float sample_offset;
   int sample_index;
-  short sample_prev;
   int fir_N;
   int fir_RES;
+  
+  // Linear interpolation helper
+  float sample_prev;
 
   // Ring buffer with overflow for contiguous storage of RINGSIZE samples.
-  short* sample;
+  float* sample;
 
   // FIR_RES filter tables (FIR_N*FIR_RES).
-  short* fir;
+  float* fir;
+
+  bool can_use_sse;
 };
 
 #endif // not __SID_H__

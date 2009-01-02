@@ -128,11 +128,11 @@ public:
 
   RESID_INLINE
   void clock(sound_sample voice1, sound_sample voice2, sound_sample voice3,
-       sound_sample ext_in);
+	     sound_sample ext_in);
   RESID_INLINE
   void clock(cycle_count delta_t,
-         sound_sample voice1, sound_sample voice2, sound_sample voice3,
-       sound_sample ext_in);
+  	     sound_sample voice1, sound_sample voice2, sound_sample voice3,
+	     sound_sample ext_in);
   void reset();
 
   // Write registers.
@@ -213,9 +213,9 @@ friend class SID;
 // ----------------------------------------------------------------------------
 RESID_INLINE
 void Filter::clock(sound_sample voice1,
-       sound_sample voice2,
-       sound_sample voice3,
-       sound_sample ext_in)
+		   sound_sample voice2,
+		   sound_sample voice3,
+		   sound_sample ext_in)
 {
   // Scale each voice down from 20 to 13 bits.
   voice1 >>= 7;
@@ -335,10 +335,10 @@ void Filter::clock(sound_sample voice1,
 // ----------------------------------------------------------------------------
 RESID_INLINE
 void Filter::clock(cycle_count delta_t,
-       sound_sample voice1,
-       sound_sample voice2,
-       sound_sample voice3,
-       sound_sample ext_in)
+		   sound_sample voice1,
+		   sound_sample voice2,
+		   sound_sample voice3,
+		   sound_sample ext_in)
 {
   // Scale each voice down from 20 to 13 bits.
   voice1 >>= 7;

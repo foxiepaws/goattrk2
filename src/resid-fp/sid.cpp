@@ -18,13 +18,160 @@
 //  ---------------------------------------------------------------------------
 
 #include "sid.h"
+
 #include <math.h>
+
+extern float convolve(const float *a, const float *b, int n);
+extern float convolve_sse(const float *a, const float *b, int n);
+
+enum host_cpu_feature {
+    HOST_CPU_MMX=1, HOST_CPU_SSE=2, HOST_CPU_SSE2=4, HOST_CPU_SSE3=8
+};
+
+/* This code is appropriate for 32-bit and 64-bit x86 CPUs. */
+#if defined(__x86_64__) || defined(__i386__) || defined(_MSC_VER)
+
+struct cpu_x86_regs_s {
+  unsigned int eax;
+  unsigned int ebx;
+  unsigned int ecx;
+  unsigned int edx;
+};
+typedef struct cpu_x86_regs_s cpu_x86_regs_t;
+
+static cpu_x86_regs_t get_cpuid_regs(unsigned int index)
+{
+  cpu_x86_regs_t retval;
+
+#if defined(_MSC_VER) /* MSVC assembly */
+  __asm {
+    mov eax, [index]
+    cpuid
+    mov [retval.eax], eax
+    mov [retval.ebx], ebx
+    mov [retval.ecx], ecx
+    mov [retval.edx], edx
+  }
+#else /* GNU assembly */
+  asm("movl %4, %%eax; cpuid; movl %%eax, %0; movl %%ebx, %1; movl %%ecx, %2; movl %%edx, %3;"
+      : "=m" (retval.eax),
+        "=m" (retval.ebx),
+        "=m" (retval.ecx),
+        "=m" (retval.edx)
+      : "r"  (index)
+      : "eax", "ebx", "ecx", "edx");
+#endif
+
+  return retval;
+}
+
+static int host_cpu_features_by_cpuid(void)
+{
+  cpu_x86_regs_t regs = get_cpuid_regs(1);
+
+  int features = 0;
+  if (regs.edx & (1 << 23))
+    features |= HOST_CPU_MMX;
+  if (regs.edx & (1 << 25))
+    features |= HOST_CPU_SSE;
+  if (regs.edx & (1 << 26))
+    features |= HOST_CPU_SSE2;
+  if (regs.ecx & (1 << 0))
+    features |= HOST_CPU_SSE3;
+
+  return features;
+}
+
+static int host_cpu_features(void)
+{
+  static int features = 0;
+  static int features_detected = 0;
+/* 32-bit only */
+#if defined(__i386__) || (defined(_MSC_VER) && defined(_WIN32))
+  unsigned long temp1, temp2;
+#endif
+
+  if (features_detected)
+    return features;
+  features_detected = 1;
+
+#if defined(_MSC_VER) && defined(_WIN32) /* MSVC compatible assembly appropriate for 32-bit Windows */
+  /* see if we are dealing with a cpu that has the cpuid instruction */
+  __asm {
+    pushf
+    pop eax
+    mov [temp1], eax
+    xor eax, 0x200000
+    push eax
+    popf
+    pushf
+    pop eax
+    mov [temp2], eax
+    push [temp1]
+    popf
+  }
+#endif
+#if defined(__i386__) /* GNU assembly */
+  asm("pushfl; popl %%eax; movl %%eax, %0; xorl $0x200000, %%eax; pushl %%eax; popfl; pushfl; popl %%eax; movl %%eax, %1; pushl %0; popfl "
+      : "=r" (temp1),
+      "=r" (temp2)
+      :
+      : "eax");
+#endif
+#if defined(__i386__) || (defined(_MSC_VER) && defined(_WIN32))
+  temp1 &= 0x200000;
+  temp2 &= 0x200000;
+  if (temp1 == temp2) {
+    /* no cpuid support, so we can't test for SSE availability -> false */
+    return 0;
+  }
+#endif
+
+  /* find the highest supported cpuid function, returned in %eax */
+  if (get_cpuid_regs(0).eax < 1) {
+    /* no cpuid 1 function, we can't test for features -> no features */
+    return 0;
+  }
+
+  features = host_cpu_features_by_cpuid();
+  return features;
+}
+
+#else /* !__x86_64__ && !__i386__ && !_MSC_VER */
+static int host_cpu_features(void)
+{
+  return 0;
+}
+#endif
+
+float SIDFP::kinked_dac(const int x, const float nonlinearity, const int max)
+{
+    float value = 0.f;
+    
+    int bit = 1;
+    float weight = 1.f;
+    const float dir = 2.0f * nonlinearity;
+    for (int i = 0; i < max; i ++) {
+        if (x & bit)
+            value += weight;
+        bit <<= 1;
+        weight *= dir;
+    }
+
+    return value / (weight / nonlinearity) * (1 << max);
+}
 
 // ----------------------------------------------------------------------------
 // Constructor.
 // ----------------------------------------------------------------------------
-SID::SID()
+SIDFP::SIDFP()
 {
+#if (RESID_USE_SSE==1)
+  can_use_sse = (host_cpu_features() & HOST_CPU_SSE) != 0;
+#else
+  can_use_sse = false;
+#endif
+
   // Initialize pointers.
   sample = 0;
   fir = 0;
@@ -33,19 +180,19 @@ SID::SID()
   voice[1].set_sync_source(&voice[0]);
   voice[2].set_sync_source(&voice[1]);
 
-  set_sampling_parameters(985248, SAMPLE_FAST, 44100);
+  set_sampling_parameters(985248, SAMPLE_INTERPOLATE, 44100);
 
   bus_value = 0;
   bus_value_ttl = 0;
 
-  ext_in = 0;
+  input(0);
 }
 
 
 // ----------------------------------------------------------------------------
 // Destructor.
 // ----------------------------------------------------------------------------
-SID::~SID()
+SIDFP::~SIDFP()
 {
   delete[] sample;
   delete[] fir;
@@ -55,7 +202,7 @@ SID::~SID()
 // ----------------------------------------------------------------------------
 // Set chip model.
 // ----------------------------------------------------------------------------
-void SID::set_chip_model(chip_model model)
+void SIDFP::set_chip_model(chip_model model)
 {
   for (int i = 0; i < 3; i++) {
     voice[i].set_chip_model(model);
@@ -65,11 +212,18 @@ void SID::set_chip_model(chip_model model)
   extfilt.set_chip_model(model);
 }
 
+/* nonlinear DAC support, set 1 for 8580 / no effect, about 0.96 otherwise */
+void SIDFP::set_voice_nonlinearity(float nl)
+{
+  for (int i = 0; i < 3; i++) {
+    voice[i].set_nonlinearity(nl);
+  }
+}
 
 // ----------------------------------------------------------------------------
 // SID reset.
 // ----------------------------------------------------------------------------
-void SID::reset()
+void SIDFP::reset()
 {
   for (int i = 0; i < 3; i++) {
     voice[i].reset();
@@ -88,45 +242,18 @@ void SID::reset()
 // Note that to mix in an external audio signal, the signal should be
 // resampled to 1MHz first to avoid sampling noise.
 // ----------------------------------------------------------------------------
-void SID::input(int sample)
+void SIDFP::input(int sample)
 {
   // Voice outputs are 20 bits. Scale up to match three voices in order
   // to facilitate simulation of the MOS8580 "digi boost" hardware hack.
-  ext_in = (sample << 4)*3;
+  ext_in = (float) ( (sample << 4) * 3 );
 }
 
-// ----------------------------------------------------------------------------
-// Read sample from audio output.
-// Both 16-bit and n-bit output is provided.
-// ----------------------------------------------------------------------------
-int SID::output()
+float SIDFP::output()
 {
-  const int range = 1 << 16;
-  const int half = range >> 1;
-  int sample = extfilt.output()/((4095*255 >> 7)*3*15*2/range);
-  if (sample >= half) {
-    return half - 1;
-  }
-  if (sample < -half) {
-    return -half;
-  }
-  return sample;
+  const float range = 1 << 15;
+  return extfilt.output() / (4095.f * 255.f * 3.f * 1.5f / range);
 }
-
-int SID::output(int bits)
-{
-  const int range = 1 << bits;
-  const int half = range >> 1;
-  int sample = extfilt.output()/((4095*255 >> 7)*3*15*2/range);
-  if (sample >= half) {
-    return half - 1;
-  }
-  if (sample < -half) {
-    return -half;
-  }
-  return sample;
-}
-
 
 // ----------------------------------------------------------------------------
 // Read registers.
@@ -145,7 +272,7 @@ int SID::output(int bits)
 // value instead). With this in mind we return the last value written to
 // any SID register for $2000 cycles without modeling the bit fading.
 // ----------------------------------------------------------------------------
-reg8 SID::read(reg8 offset)
+reg8 SIDFP::read(reg8 offset)
 {
   switch (offset) {
   case 0x19:
@@ -165,7 +292,7 @@ reg8 SID::read(reg8 offset)
 // ----------------------------------------------------------------------------
 // Write registers.
 // ----------------------------------------------------------------------------
-void SID::write(reg8 offset, reg8 value)
+void SIDFP::write(reg8 offset, reg8 value)
 {
   bus_value = value;
   bus_value_ttl = 0x4000;
@@ -255,7 +382,7 @@ void SID::write(reg8 offset, reg8 value)
 // ----------------------------------------------------------------------------
 // Constructor.
 // ----------------------------------------------------------------------------
-SID::State::State()
+SIDFP::State::State()
 {
   int i;
 
@@ -274,7 +401,7 @@ SID::State::State()
     exponential_counter[i] = 0;
     exponential_counter_period[i] = 1;
     envelope_counter[i] = 0;
-    envelope_state[i] = EnvelopeGenerator::RELEASE;
+    envelope_state[i] = EnvelopeGeneratorFP::RELEASE;
     hold_zero[i] = true;
   }
 }
@@ -283,14 +410,14 @@ SID::State::State()
 // ----------------------------------------------------------------------------
 // Read state.
 // ----------------------------------------------------------------------------
-SID::State SID::read_state()
+SIDFP::State SIDFP::read_state()
 {
   State state;
   int i, j;
 
   for (i = 0, j = 0; i < 3; i++, j += 7) {
-    WaveformGenerator& wave = voice[i].wave;
-    EnvelopeGenerator& envelope = voice[i].envelope;
+    WaveformGeneratorFP& wave = voice[i].wave;
+    EnvelopeGeneratorFP& envelope = voice[i].envelope;
     state.sid_register[j + 0] = wave.freq & 0xff;
     state.sid_register[j + 1] = wave.freq >> 8;
     state.sid_register[j + 2] = wave.pw & 0xff;
@@ -343,7 +470,7 @@ SID::State SID::read_state()
 // ----------------------------------------------------------------------------
 // Write state.
 // ----------------------------------------------------------------------------
-void SID::write_state(const State& state)
+void SIDFP::write_state(const State& state)
 {
   int i;
 
@@ -371,7 +498,7 @@ void SID::write_state(const State& state)
 // ----------------------------------------------------------------------------
 // Enable filter.
 // ----------------------------------------------------------------------------
-void SID::enable_filter(bool enable)
+void SIDFP::enable_filter(bool enable)
 {
   filter.enable_filter(enable);
 }
@@ -380,7 +507,7 @@ void SID::enable_filter(bool enable)
 // ----------------------------------------------------------------------------
 // Enable external filter.
 // ----------------------------------------------------------------------------
-void SID::enable_external_filter(bool enable)
+void SIDFP::enable_external_filter(bool enable)
 {
   extfilt.enable_filter(enable);
 }
@@ -390,10 +517,11 @@ void SID::enable_external_filter(bool enable)
 // I0() computes the 0th order modified Bessel function of the first kind.
 // This function is originally from resample-1.5/filterkit.c by J. O. Smith.
 // ----------------------------------------------------------------------------
-double SID::I0(double x)
+double SIDFP::I0(double x)
 {
-  // Max error acceptable in I0.
-  const double I0e = 1e-6;
+  // Max error acceptable in I0 could be 1e-6, which gives that 96 dB already.
+  // I'm overspecify these errors to get a beautiful FFT dump of the FIR.
+  const double I0e = 1e-10;
 
   double sum, u, halfx, temp;
   int n;
@@ -433,49 +561,21 @@ double SID::I0(double x)
 // to slightly below 20kHz. This constraint ensures that the FIR table is
 // not overfilled.
 // ----------------------------------------------------------------------------
-bool SID::set_sampling_parameters(double clock_freq, sampling_method method,
-				  double sample_freq, double pass_freq,
-				  double filter_scale)
+bool SIDFP::set_sampling_parameters(float clock_freq, sampling_method method,
+                                  float sample_freq, float pass_freq)
 {
-  // Check resampling constraints.
-  if (method == SAMPLE_RESAMPLE_INTERPOLATE || method == SAMPLE_RESAMPLE_FAST)
-  {
-    // Check whether the sample ring buffer would overfill.
-    if (FIR_N*clock_freq/sample_freq >= RINGSIZE) {
-      return false;
-    }
-
-    // The default passband limit is 0.9*sample_freq/2 for sample
-    // frequencies below ~ 44.1kHz, and 20kHz for higher sample frequencies.
-    if (pass_freq < 0) {
-      pass_freq = 20000;
-      if (2*pass_freq/sample_freq >= 0.9) {
-	pass_freq = 0.9*sample_freq/2;
-      }
-    }
-    // Check whether the FIR table would overfill.
-    else if (pass_freq > 0.9*sample_freq/2) {
-      return false;
-    }
-
-    // The filter scaling is only included to avoid clipping, so keep
-    // it sane.
-    if (filter_scale < 0.9 || filter_scale > 1.0) {
-      return false;
-    }
-  }
-
   clock_frequency = clock_freq;
   sampling = method;
 
-  cycles_per_sample =
-    cycle_count(clock_freq/sample_freq*(1 << FIXP_SHIFT) + 0.5);
+  filter.set_clock_frequency(clock_freq);
+  extfilt.set_clock_frequency(clock_freq);
+  adjust_sampling_frequency(sample_freq);
 
   sample_offset = 0;
   sample_prev = 0;
 
   // FIR initialization is only necessary for resampling.
-  if (method != SAMPLE_RESAMPLE_INTERPOLATE && method != SAMPLE_RESAMPLE_FAST)
+  if (method != SAMPLE_RESAMPLE_INTERPOLATE)
   {
     delete[] sample;
     delete[] fir;
@@ -483,15 +583,16 @@ bool SID::set_sampling_parameters(double clock_freq, sampling_method method,
     fir = 0;
     return true;
   }
+  
+  const int bits = 16;
 
-  const double pi = 3.1415926535897932385;
+  if (pass_freq > 20000)
+    pass_freq = 20000;  
+  if (2*pass_freq/sample_freq > 0.9)
+    pass_freq = 0.9f*sample_freq/2;
 
   // 16 bits -> -96dB stopband attenuation.
-  const double A = -20*log10(1.0/(1 << 16));
-  // A fraction of the bandwidth is allocated to the transition band,
-  double dw = (1 - 2*pass_freq/sample_freq)*pi;
-  // The cutoff frequency is midway through the transition band.
-  double wc = (2*pass_freq/sample_freq + 1)*pi/2;
+  const double A = -20*log10(1.0/(1 << bits));
 
   // For calculation of beta and N see the reference for the kaiserord
   // function in the MATLAB Signal Processing Toolbox:
@@ -499,55 +600,64 @@ bool SID::set_sampling_parameters(double clock_freq, sampling_method method,
   const double beta = 0.1102*(A - 8.7);
   const double I0beta = I0(beta);
 
-  // The filter order will maximally be 124 with the current constraints.
-  // N >= (96.33 - 7.95)/(2.285*0.1*pi) -> N >= 123
-  // The filter order is equal to the number of zero crossings, i.e.
-  // it should be an even number (sinc is symmetric about x = 0).
-  int N = int((A - 7.95)/(2.285*dw) + 0.5);
-  N += N & 1;
-
   double f_samples_per_cycle = sample_freq/clock_freq;
   double f_cycles_per_sample = clock_freq/sample_freq;
 
-  // The filter length is equal to the filter order + 1.
-  // The filter length must be an odd number (sinc is symmetric about x = 0).
-  fir_N = int(N*f_cycles_per_sample) + 1;
-  fir_N |= 1;
+  /* This code utilizes the fact that aliasing back to 20 kHz from
+   * sample_freq/2 is inaudible. This allows us to define a passband
+   * wider than normally. We might also consider aliasing back to pass_freq,
+   * but as this can be less than 20 kHz, it might become audible... */
+  double aliasing_allowance = sample_freq / 2 - 20000;
+  if (aliasing_allowance < 0)
+    aliasing_allowance = 0;
 
-  // We clamp the filter table resolution to 2^n, making the fixpoint
-  // sample_offset a whole multiple of the filter table resolution.
-  int res = method == SAMPLE_RESAMPLE_INTERPOLATE ?
-    (int)FIR_RES_INTERPOLATE : (int)FIR_RES_FAST;
-  int n = (int)ceil(log(res/f_cycles_per_sample)/log(2.0));
-  fir_RES = 1 << n;
+  double transition_bandwidth = sample_freq/2 - pass_freq + aliasing_allowance;
+  {
+    /* Filter order according to Kaiser's paper. */
 
+    int N = (int) ((A - 7.95)/(2 * M_PI * 2.285 * transition_bandwidth/sample_freq) + 0.5);
+    N += N & 1;
+
+    // The filter length is equal to the filter order + 1.
+    // The filter length must be an odd number (sinc is symmetric about x = 0).
+    fir_N = int(N*f_cycles_per_sample) + 1;
+    fir_N |= 1;
+
+    // Check whether the sample ring buffer would overfill.
+    if (fir_N > RINGSIZE - 1)
+      return false;
+
+    /* Error is bound by 1.234 / L^2 */
+    fir_RES = (int) (sqrt(1.234 * (1 << bits)) / f_cycles_per_sample + 0.5);
+  }
+ 
   // Allocate memory for FIR tables.
   delete[] fir;
-  fir = new short[fir_N*fir_RES];
+  fir = new float[fir_N*fir_RES];
+
+  // The cutoff frequency is midway through the transition band.
+  double wc = (pass_freq + transition_bandwidth/2) / sample_freq * M_PI * 2;
 
   // Calculate fir_RES FIR tables for linear interpolation.
   for (int i = 0; i < fir_RES; i++) {
-    int fir_offset = i*fir_N + fir_N/2;
     double j_offset = double(i)/fir_RES;
     // Calculate FIR table. This is the sinc function, weighted by the
     // Kaiser window.
-    for (int j = -fir_N/2; j <= fir_N/2; j++) {
-      double jx = j - j_offset;
+    for (int j = 0; j < fir_N; j ++) {
+      double jx = j - fir_N/2. - j_offset;
       double wt = wc*jx/f_cycles_per_sample;
       double temp = jx/(fir_N/2);
       double Kaiser =
-	fabs(temp) <= 1 ? I0(beta*sqrt(1 - temp*temp))/I0beta : 0;
+        fabs(temp) <= 1 ? I0(beta*sqrt(1 - temp*temp))/I0beta : 0;
       double sincwt =
-	fabs(wt) >= 1e-6 ? sin(wt)/wt : 1;
-      double val =
-	(1 << FIR_SHIFT)*filter_scale*f_samples_per_cycle*wc/pi*sincwt*Kaiser;
-      fir[fir_offset + j] = short(val + 0.5);
+        fabs(wt) >= 1e-8 ? sin(wt)/wt : 1;
+      fir[i * fir_N + j] = (float) (f_samples_per_cycle*wc/M_PI*sincwt*Kaiser);
     }
   }
 
   // Allocate sample buffer.
   if (!sample) {
-    sample = new short[RINGSIZE*2];
+    sample = new float[RINGSIZE*2];
   }
   // Clear sample buffer.
   for (int j = 0; j < RINGSIZE*2; j++) {
@@ -557,7 +667,6 @@ bool SID::set_sampling_parameters(double clock_freq, sampling_method method,
 
   return true;
 }
-
 
 // ----------------------------------------------------------------------------
 // Adjustment of SID sampling frequency.
@@ -571,44 +680,27 @@ bool SID::set_sampling_parameters(double clock_freq, sampling_method method,
 // that any adjustment of the sampling frequency will change the
 // characteristics of the resampling filter, since the filter is not rebuilt.
 // ----------------------------------------------------------------------------
-void SID::adjust_sampling_frequency(double sample_freq)
+void SIDFP::adjust_sampling_frequency(float sample_freq)
 {
-  cycles_per_sample =
-    cycle_count(clock_frequency/sample_freq*(1 << FIXP_SHIFT) + 0.5);
+  cycles_per_sample = clock_frequency/sample_freq;
 }
 
-
-// ----------------------------------------------------------------------------
-// Return array of default spline interpolation points to map FC to
-// filter cutoff frequency.
-// ----------------------------------------------------------------------------
-void SID::fc_default(const fc_point*& points, int& count)
-{
-  filter.fc_default(points, count);
+void SIDFP::age_bus_value(cycle_count n) {
+  if (bus_value_ttl != 0) {
+    bus_value_ttl -= n;
+    if (bus_value_ttl <= 0) {
+        bus_value = 0;
+        bus_value_ttl = 0;
+    }
+  }
 }
-
-
-// ----------------------------------------------------------------------------
-// Return FC spline plotter object.
-// ----------------------------------------------------------------------------
-PointPlotter<sound_sample> SID::fc_plotter()
-{
-  return filter.fc_plotter();
-}
-
 
 // ----------------------------------------------------------------------------
 // SID clocking - 1 cycle.
 // ----------------------------------------------------------------------------
-void SID::clock()
+void SIDFP::clock()
 {
   int i;
-
-  // Age bus value.
-  if (--bus_value_ttl <= 0) {
-    bus_value = 0;
-    bus_value_ttl = 0;
-  }
 
   // Clock amplitude modulators.
   for (i = 0; i < 3; i++) {
@@ -626,92 +718,8 @@ void SID::clock()
   }
 
   // Clock filter.
-  filter.clock(voice[0].output(), voice[1].output(), voice[2].output(), ext_in);
-
-  // Clock external filter.
-  extfilt.clock(filter.output());
+  extfilt.clock(filter.clock(voice[0].output(), voice[1].output(), voice[2].output(), ext_in));
 }
-
-
-// ----------------------------------------------------------------------------
-// SID clocking - delta_t cycles.
-// ----------------------------------------------------------------------------
-void SID::clock(cycle_count delta_t)
-{
-  int i;
-
-  if (delta_t <= 0) {
-    return;
-  }
-
-  // Age bus value.
-  bus_value_ttl -= delta_t;
-  if (bus_value_ttl <= 0) {
-    bus_value = 0;
-    bus_value_ttl = 0;
-  }
-
-  // Clock amplitude modulators.
-  for (i = 0; i < 3; i++) {
-    voice[i].envelope.clock(delta_t);
-  }
-
-  // Clock and synchronize oscillators.
-  // Loop until we reach the current cycle.
-  cycle_count delta_t_osc = delta_t;
-  while (delta_t_osc) {
-    cycle_count delta_t_min = delta_t_osc;
-
-    // Find minimum number of cycles to an oscillator accumulator MSB toggle.
-    // We have to clock on each MSB on / MSB off for hard sync to operate
-    // correctly.
-    for (i = 0; i < 3; i++) {
-      WaveformGenerator& wave = voice[i].wave;
-
-      // It is only necessary to clock on the MSB of an oscillator that is
-      // a sync source and has freq != 0.
-      if (!(wave.sync_dest->sync && wave.freq)) {
-	continue;
-      }
-
-      reg16 freq = wave.freq;
-      reg24 accumulator = wave.accumulator;
-
-      // Clock on MSB off if MSB is on, clock on MSB on if MSB is off.
-      reg24 delta_accumulator =
-	(accumulator & 0x800000 ? 0x1000000 : 0x800000) - accumulator;
-
-      cycle_count delta_t_next = delta_accumulator/freq;
-      if (delta_accumulator%freq) {
-	++delta_t_next;
-      }
-
-      if (delta_t_next < delta_t_min) {
-	delta_t_min = delta_t_next;
-      }
-    }
-
-    // Clock oscillators.
-    for (i = 0; i < 3; i++) {
-      voice[i].wave.clock(delta_t_min);
-    }
-
-    // Synchronize oscillators.
-    for (i = 0; i < 3; i++) {
-      voice[i].wave.synchronize();
-    }
-
-    delta_t_osc -= delta_t_min;
-  }
-
-  // Clock filter.
-  filter.clock(delta_t,
-	       voice[0].output(), voice[1].output(), voice[2].output(), ext_in);
-
-  // Clock external filter.
-  extfilt.clock(delta_t, filter.output());
-}
-
 
 // ----------------------------------------------------------------------------
 // SID clocking with audio sampling.
@@ -727,51 +735,26 @@ void SID::clock(cycle_count delta_t)
 // }
 // 
 // ----------------------------------------------------------------------------
-int SID::clock(cycle_count& delta_t, short* buf, int n, int interleave)
+int SIDFP::clock(cycle_count& delta_t, short* buf, int n, int interleave)
 {
+  /* XXX I assume n is generally large enough for delta_t here... */
+  age_bus_value(delta_t);
+  int res;
   switch (sampling) {
   default:
-  case SAMPLE_FAST:
-    return clock_fast(delta_t, buf, n, interleave);
   case SAMPLE_INTERPOLATE:
-    return clock_interpolate(delta_t, buf, n, interleave);
+    res = clock_interpolate(delta_t, buf, n, interleave);
+    break;
   case SAMPLE_RESAMPLE_INTERPOLATE:
-    return clock_resample_interpolate(delta_t, buf, n, interleave);
-  case SAMPLE_RESAMPLE_FAST:
-    return clock_resample_fast(delta_t, buf, n, interleave);
-  }
-}
-
-// ----------------------------------------------------------------------------
-// SID clocking with audio sampling - delta clocking picking nearest sample.
-// ----------------------------------------------------------------------------
-RESID_INLINE
-int SID::clock_fast(cycle_count& delta_t, short* buf, int n,
-		    int interleave)
-{
-  int s = 0;
-
-  for (;;) {
-    cycle_count next_sample_offset = sample_offset + cycles_per_sample + (1 << (FIXP_SHIFT - 1));
-    cycle_count delta_t_sample = next_sample_offset >> FIXP_SHIFT;
-    if (delta_t_sample > delta_t) {
-      break;
-    }
-    if (s >= n) {
-      return s;
-    }
-    clock(delta_t_sample);
-    delta_t -= delta_t_sample;
-    sample_offset = (next_sample_offset & FIXP_MASK) - (1 << (FIXP_SHIFT - 1));
-    buf[s++*interleave] = output();
+    res = clock_resample_interpolate(delta_t, buf, n, interleave);
+    break;
   }
 
-  clock(delta_t);
-  sample_offset -= delta_t << FIXP_SHIFT;
-  delta_t = 0;
-  return s;
-}
+  filter.nuke_denormals();
+  extfilt.nuke_denormals();
 
+  return res;
+}
 
 // ----------------------------------------------------------------------------
 // SID clocking with audio sampling - cycle based with linear sample
@@ -783,15 +766,15 @@ int SID::clock_fast(cycle_count& delta_t, short* buf, int n,
 // sampling noise.
 // ----------------------------------------------------------------------------
 RESID_INLINE
-int SID::clock_interpolate(cycle_count& delta_t, short* buf, int n,
-			   int interleave)
+int SIDFP::clock_interpolate(cycle_count& delta_t, short* buf, int n,
+                           int interleave)
 {
   int s = 0;
   int i;
 
   for (;;) {
-    cycle_count next_sample_offset = sample_offset + cycles_per_sample;
-    cycle_count delta_t_sample = next_sample_offset >> FIXP_SHIFT;
+    float next_sample_offset = sample_offset + cycles_per_sample;
+    int delta_t_sample = (int) next_sample_offset;
     if (delta_t_sample > delta_t) {
       break;
     }
@@ -807,11 +790,20 @@ int SID::clock_interpolate(cycle_count& delta_t, short* buf, int n,
     }
 
     delta_t -= delta_t_sample;
-    sample_offset = next_sample_offset & FIXP_MASK;
+    sample_offset = next_sample_offset - delta_t_sample;
 
-    short sample_now = output();
-    buf[s++*interleave] =
-      sample_prev + (sample_offset*(sample_now - sample_prev) >> FIXP_SHIFT);
+    float sample_now = output();
+    int v = (int)(sample_prev + (sample_offset * (sample_now - sample_prev)));
+    // Saturated arithmetics to guard against 16 bit sample overflow.
+    const int half = 1 << 15;
+    if (v >= half) {
+      v = half - 1;
+    }
+    else if (v < -half) {
+      v = -half;
+    }
+    buf[s++*interleave] = v;
+
     sample_prev = sample_now;
   }
 
@@ -822,11 +814,10 @@ int SID::clock_interpolate(cycle_count& delta_t, short* buf, int n,
     sample_prev = output();
     clock();
   }
-  sample_offset -= delta_t << FIXP_SHIFT;
+  sample_offset -= delta_t;
   delta_t = 0;
   return s;
 }
-
 
 // ----------------------------------------------------------------------------
 // SID clocking with audio sampling - cycle based with audio resampling.
@@ -865,61 +856,60 @@ int SID::clock_interpolate(cycle_count& delta_t, short* buf, int n,
 // implementation dependent in the C++ standard.
 // ----------------------------------------------------------------------------
 RESID_INLINE
-int SID::clock_resample_interpolate(cycle_count& delta_t, short* buf, int n,
-				    int interleave)
+int SIDFP::clock_resample_interpolate(cycle_count& delta_t, short* buf, int n,
+                                    int interleave)
 {
   int s = 0;
 
   for (;;) {
-    cycle_count next_sample_offset = sample_offset + cycles_per_sample;
-    cycle_count delta_t_sample = next_sample_offset >> FIXP_SHIFT;
-    if (delta_t_sample > delta_t) {
+    float next_sample_offset = sample_offset + cycles_per_sample;
+    /* full clocks left to next sample */
+    int delta_t_sample = (int) next_sample_offset;
+    if (delta_t_sample > delta_t || s >= n)
       break;
-    }
-    if (s >= n) {
-      return s;
-    }
+
+    /* clock forward delta_t_sample samples */
     for (int i = 0; i < delta_t_sample; i++) {
       clock();
       sample[sample_index] = sample[sample_index + RINGSIZE] = output();
-      ++sample_index;
-      sample_index &= 0x3fff;
+      ++ sample_index;
+      sample_index &= RINGSIZE - 1;
     }
     delta_t -= delta_t_sample;
-    sample_offset = next_sample_offset & FIXP_MASK;
 
-    int fir_offset = sample_offset*fir_RES >> FIXP_SHIFT;
-    int fir_offset_rmd = sample_offset*fir_RES & FIXP_MASK;
-    short* fir_start = fir + fir_offset*fir_N;
-    short* sample_start = sample + sample_index - fir_N + RINGSIZE;
+    /* Phase of the sample in terms of clock, [0 .. 1[. */
+    sample_offset = next_sample_offset - (float) delta_t_sample;
 
-    // Convolution with filter impulse response.
-    int j;
-    int v1 = 0;
-    for (j = 0; j < fir_N; j++) {
-      v1 += sample_start[j]*fir_start[j];
-    }
+    /* find the first of the nearest fir tables close to the phase */
+    float fir_offset_rmd = sample_offset * fir_RES;
+    int fir_offset = (int) fir_offset_rmd;
+    /* [0 .. 1[ */
+    fir_offset_rmd -= (float) fir_offset;
+
+    /* find fir_N most recent samples, plus one extra in case the FIR wraps. */
+    float* sample_start = sample + sample_index - fir_N + RINGSIZE - 1;
+
+    float v1 =
+#if (RESID_USE_SSE==1)
+      can_use_sse ? convolve_sse(sample_start, fir + fir_offset*fir_N, fir_N) :
+#endif
+        convolve(sample_start, fir + fir_offset*fir_N, fir_N);
 
     // Use next FIR table, wrap around to first FIR table using
     // previous sample.
-    if (++fir_offset == fir_RES) {
+    if (++ fir_offset == fir_RES) {
       fir_offset = 0;
-      --sample_start;
+      ++ sample_start;
     }
-    fir_start = fir + fir_offset*fir_N;
+    float v2 =
+#if (RESID_USE_SSE==1)
+      can_use_sse ? convolve_sse(sample_start, fir + fir_offset*fir_N, fir_N) :
+#endif
+        convolve(sample_start, fir + fir_offset*fir_N, fir_N);
 
-    // Convolution with filter impulse response.
-    int v2 = 0;
-    for (j = 0; j < fir_N; j++) {
-      v2 += sample_start[j]*fir_start[j];
-    }
-
-    // Linear interpolation.
-    // fir_offset_rmd is equal for all samples, it can thus be factorized out:
-    // sum(v1 + rmd*(v2 - v1)) = sum(v1) + rmd*(sum(v2) - sum(v1))
-    int v = v1 + (fir_offset_rmd*(v2 - v1) >> FIXP_SHIFT);
-
-    v >>= FIR_SHIFT;
+    // Linear interpolation between the sinc tables yields good approximation
+    // for the exact value.
+    int v = (int) (v1 + fir_offset_rmd * (v2 - v1));
 
     // Saturated arithmetics to guard against 16 bit sample overflow.
     const int half = 1 << 15;
@@ -930,79 +920,17 @@ int SID::clock_resample_interpolate(cycle_count& delta_t, short* buf, int n,
       v = -half;
     }
 
-    buf[s++*interleave] = v;
+    buf[s ++ * interleave] = v;
   }
 
+  /* clock forward delta_t samples */
   for (int i = 0; i < delta_t; i++) {
     clock();
     sample[sample_index] = sample[sample_index + RINGSIZE] = output();
-    ++sample_index;
-    sample_index &= 0x3fff;
+    ++ sample_index;
+    sample_index &= RINGSIZE - 1;
   }
-  sample_offset -= delta_t << FIXP_SHIFT;
-  delta_t = 0;
-  return s;
-}
-
-
-// ----------------------------------------------------------------------------
-// SID clocking with audio sampling - cycle based with audio resampling.
-// ----------------------------------------------------------------------------
-RESID_INLINE
-int SID::clock_resample_fast(cycle_count& delta_t, short* buf, int n,
-			     int interleave)
-{
-  int s = 0;
-
-  for (;;) {
-    cycle_count next_sample_offset = sample_offset + cycles_per_sample;
-    cycle_count delta_t_sample = next_sample_offset >> FIXP_SHIFT;
-    if (delta_t_sample > delta_t) {
-      break;
-    }
-    if (s >= n) {
-      return s;
-    }
-    for (int i = 0; i < delta_t_sample; i++) {
-      clock();
-      sample[sample_index] = sample[sample_index + RINGSIZE] = output();
-      ++sample_index;
-      sample_index &= 0x3fff;
-    }
-    delta_t -= delta_t_sample;
-    sample_offset = next_sample_offset & FIXP_MASK;
-
-    int fir_offset = sample_offset*fir_RES >> FIXP_SHIFT;
-    short* fir_start = fir + fir_offset*fir_N;
-    short* sample_start = sample + sample_index - fir_N + RINGSIZE;
-
-    // Convolution with filter impulse response.
-    int v = 0;
-    for (int j = 0; j < fir_N; j++) {
-      v += sample_start[j]*fir_start[j];
-    }
-
-    v >>= FIR_SHIFT;
-
-    // Saturated arithmetics to guard against 16 bit sample overflow.
-    const int half = 1 << 15;
-    if (v >= half) {
-      v = half - 1;
-    }
-    else if (v < -half) {
-      v = -half;
-    }
-
-    buf[s++*interleave] = v;
-  }
-
-  for (int i = 0; i < delta_t; i++) {
-    clock();
-    sample[sample_index] = sample[sample_index + RINGSIZE] = output();
-    ++sample_index;
-    sample_index &= 0x3fff;
-  }
-  sample_offset -= delta_t << FIXP_SHIFT;
+  sample_offset -= (float) delta_t;
   delta_t = 0;
   return s;
 }

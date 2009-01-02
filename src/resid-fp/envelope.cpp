@@ -16,9 +16,6 @@
 //  along with this program; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //  ---------------------------------------------------------------------------
-// C64 DTV modifications written by
-//   Daniel Kahlin <daniel@kahlin.net>
-// Copyright (C) 2007  Daniel Kahlin <daniel@kahlin.net>
 
 #define __ENVELOPE_CC__
 #include "envelope.h"
@@ -26,7 +23,7 @@
 // ----------------------------------------------------------------------------
 // Constructor.
 // ----------------------------------------------------------------------------
-EnvelopeGenerator::EnvelopeGenerator()
+EnvelopeGeneratorFP::EnvelopeGeneratorFP()
 {
   reset();
 }
@@ -34,7 +31,7 @@ EnvelopeGenerator::EnvelopeGenerator()
 // ----------------------------------------------------------------------------
 // SID reset.
 // ----------------------------------------------------------------------------
-void EnvelopeGenerator::reset()
+void EnvelopeGeneratorFP::reset()
 {
   envelope_counter = 0;
 
@@ -99,7 +96,7 @@ void EnvelopeGenerator::reset()
 // The described method is thus sufficient for exact calculation of the rate
 // periods.
 //
-reg16 EnvelopeGenerator::rate_counter_period[] = {
+reg16 EnvelopeGeneratorFP::rate_counter_period[] = {
       9,  //   2ms*1.0MHz/256 =     7.81
      32,  //   8ms*1.0MHz/256 =    31.25
      63,  //  16ms*1.0MHz/256 =    62.50
@@ -156,7 +153,7 @@ reg16 EnvelopeGenerator::rate_counter_period[] = {
 // envelope counter are compared to the 4-bit sustain value.
 // This has been verified by sampling ENV3.
 //
-reg8 EnvelopeGenerator::sustain_level[] = {
+reg8 EnvelopeGeneratorFP::sustain_level[] = {
   0x00,
   0x11,
   0x22,
@@ -179,7 +176,7 @@ reg8 EnvelopeGenerator::sustain_level[] = {
 // ----------------------------------------------------------------------------
 // Register functions.
 // ----------------------------------------------------------------------------
-void EnvelopeGenerator::writeCONTROL_REG(reg8 control)
+void EnvelopeGeneratorFP::writeCONTROL_REG(reg8 control)
 {
   reg8 gate_next = control & 0x01;
 
@@ -189,7 +186,7 @@ void EnvelopeGenerator::writeCONTROL_REG(reg8 control)
   // Gate bit on: Start attack, decay, sustain.
   if (!gate && gate_next) {
     state = ATTACK;
-    rate_period = rate_counter_period[attack];
+    update_rate_period(rate_counter_period[attack]);
 
     // Switching to attack state unlocks the zero freeze.
     hold_zero = false;
@@ -197,39 +194,61 @@ void EnvelopeGenerator::writeCONTROL_REG(reg8 control)
   // Gate bit off: Start release.
   else if (gate && !gate_next) {
     state = RELEASE;
-    rate_period = rate_counter_period[release];
+    update_rate_period(rate_counter_period[release]);
   }
 
   gate = gate_next;
 }
 
-void EnvelopeGenerator::writeATTACK_DECAY(reg8 attack_decay)
+void EnvelopeGeneratorFP::writeATTACK_DECAY(reg8 attack_decay)
 {
   attack = (attack_decay >> 4) & 0x0f;
   decay = attack_decay & 0x0f;
   if (state == ATTACK) {
-    rate_period = rate_counter_period[attack];
+    update_rate_period(rate_counter_period[attack]);
   }
   else if (state == DECAY_SUSTAIN) {
-    rate_period = rate_counter_period[decay];
+    update_rate_period(rate_counter_period[decay]);
   }
 }
 
-void EnvelopeGenerator::writeSUSTAIN_RELEASE(reg8 sustain_release)
+void EnvelopeGeneratorFP::writeSUSTAIN_RELEASE(reg8 sustain_release)
 {
   sustain = (sustain_release >> 4) & 0x0f;
   release = sustain_release & 0x0f;
   if (state == RELEASE) {
-    rate_period = rate_counter_period[release];
+    update_rate_period(rate_counter_period[release]);
   }
 }
 
-reg8 EnvelopeGenerator::readENV()
+reg8 EnvelopeGeneratorFP::readENV()
 {
   return output();
 }
 
-void EnvelopeGenerator::writeENV(reg8 value)
+void EnvelopeGeneratorFP::update_rate_period(reg16 newperiod)
 {
-    envelope_counter = value;
+    rate_period = newperiod;
+
+   /* The ADSR counter is XOR shift register with 0x7fff unique values.
+    * If the rate_period is adjusted to a value already seen in this cycle,
+    * the register will wrap around. This is known as the ADSR delay bug.
+    *
+    * To simplify the hot path calculation, we simulate this through observing
+    * that we add the 0x7fff cycle delay by changing the rate_counter variable
+    * directly. This takes care of the 99 % common case. However, playroutine
+    * could make multiple consequtive rate_period adjustments, in which case we
+    * need to cancel the previous adjustment. */
+
+    /* if the new period exeecds 0x7fff, we need to wrap */
+    if (rate_period - rate_counter > 0x7fff)
+        rate_counter += 0x7fff;
+
+    /* simulate 0x7fff wraparound, if the period-to-be-written
+     * is less than the current value. */
+    if (rate_period <= rate_counter)
+        rate_counter -= 0x7fff;
+
+    /* at this point it should be impossible for
+     * rate_counter >= rate_period. If it is, there is a bug... */
 }

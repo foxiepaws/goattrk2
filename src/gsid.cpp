@@ -5,7 +5,8 @@
 #define GSID_C
 
 #include <stdlib.h>
-#include "sid.h"
+#include "resid/sid.h"
+#include "resid-fp/sid.h"
 
 extern "C" {
 
@@ -28,11 +29,12 @@ unsigned char altsidorder[] =
    0x12,0x0e,0x0f,0x10,0x11,0x13,0x14};
 
 SID *sid = 0;
+SIDFP *sidfp = 0;
 
 extern unsigned residdelay;
 extern unsigned adparam;
 
-void sid_init(int speed, unsigned m, unsigned ntsc, unsigned interpolate, unsigned customclockrate)
+void sid_init(int speed, unsigned m, unsigned ntsc, unsigned interpolate, unsigned customclockrate, unsigned usefp)
 {
   int c;
 
@@ -44,31 +46,55 @@ void sid_init(int speed, unsigned m, unsigned ntsc, unsigned interpolate, unsign
 
   samplerate = speed;
 
-  if (!sid) sid = new SID;
+  if (!usefp)
+  {
+    if (sidfp)
+    {
+      delete sidfp;
+      sidfp = NULL;
+    }
+
+    if (!sid) sid = new SID;
+  }
+  else
+  {
+    if (sid)
+    {
+      delete sid;
+      sid = NULL;
+    }
+    
+    if (!sidfp) sidfp = new SIDFP;
+  }
 
   switch(interpolate)
   {
     case 0:
-    sid->set_sampling_parameters(clockrate, SAMPLE_FAST, speed, 20000);
+    if (sid) sid->set_sampling_parameters(clockrate, SAMPLE_FAST, speed, 20000);
+    if (sidfp) sidfp->set_sampling_parameters(clockrate, SAMPLE_FAST, speed, 20000);
     break;
 
     default:
-    sid->set_sampling_parameters(clockrate, SAMPLE_INTERPOLATE, speed, 20000);
+    if (sid) sid->set_sampling_parameters(clockrate, SAMPLE_INTERPOLATE, speed, 20000);
+    if (sidfp) sidfp->set_sampling_parameters(clockrate, SAMPLE_INTERPOLATE, speed, 20000);
     break;
   }
 
-  sid->reset();
+  if (sid) sid->reset();
+  if (sidfp) sidfp->reset();
   for (c = 0; c < NUMSIDREGS; c++)
   {
     sidreg[c] = 0x00;
   }
   if (m == 1)
   {
-    sid->set_chip_model(MOS8580);
+    if (sid) sid->set_chip_model(MOS8580);
+    if (sidfp) sidfp->set_chip_model(MOS8580FP);
   }
   else
   {
-    sid->set_chip_model(MOS6581);
+    if (sid) sid->set_chip_model(MOS6581);
+    if (sidfp) sidfp->set_chip_model(MOS6581FP);
   }
 }
 
@@ -84,7 +110,7 @@ int sid_fillbuffer(short *ptr, int samples)
 {
   int tdelta;
   int tdelta2;
-  int result;
+  int result = 0;
   int total = 0;
   int c;
 
@@ -100,7 +126,8 @@ int sid_fillbuffer(short *ptr, int samples)
   	if ((o == 4) || (o == 11) || (o == 18))
   	{
   	  tdelta2 = SIDWAVEDELAY;
-      result = sid->clock(tdelta2, ptr, samples);
+      if (sid) result = sid->clock(tdelta2, ptr, samples);
+      if (sidfp) result = sidfp->clock(tdelta2, ptr, samples);
       total += result;
       ptr += result;
       samples -= result;
@@ -111,23 +138,27 @@ int sid_fillbuffer(short *ptr, int samples)
     if ((badline == c) && (residdelay))
   	{
       tdelta2 = residdelay;
-      result = sid->clock(tdelta2, ptr, samples);
+      if (sid) result = sid->clock(tdelta2, ptr, samples);
+      if (sidfp) result = sidfp->clock(tdelta2, ptr, samples);
       total += result;
       ptr += result;
       samples -= result;
       tdelta -= residdelay;
     }
 
-    sid->write(o, sidreg[o]);
+    if (sid) sid->write(o, sidreg[o]);
+    if (sidfp) sidfp->write(o, sidreg[o]);
 
     tdelta2 = SIDWRITEDELAY;
-    result = sid->clock(tdelta2, ptr, samples);
+    if (sid) result = sid->clock(tdelta2, ptr, samples);
+    if (sidfp) result = sidfp->clock(tdelta2, ptr, samples);
     total += result;
     ptr += result;
     samples -= result;
     tdelta -= SIDWRITEDELAY;
   }
-  result = sid->clock(tdelta, ptr, samples);
+  if (sid) result = sid->clock(tdelta, ptr, samples);
+  if (sidfp) result = sidfp->clock(tdelta, ptr, samples);
   total += result;
 
   return total;

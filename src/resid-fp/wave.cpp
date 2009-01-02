@@ -16,9 +16,6 @@
 //  along with this program; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //  ---------------------------------------------------------------------------
-// C64 DTV modifications written by
-//   Daniel Kahlin <daniel@kahlin.net>
-// Copyright (C) 2007  Daniel Kahlin <daniel@kahlin.net>
 
 #define __WAVE_CC__
 #include "wave.h"
@@ -26,11 +23,11 @@
 // ----------------------------------------------------------------------------
 // Constructor.
 // ----------------------------------------------------------------------------
-WaveformGenerator::WaveformGenerator()
+WaveformGeneratorFP::WaveformGeneratorFP()
 {
   sync_source = this;
 
-  set_chip_model(MOS6581);
+  set_chip_model(MOS6581FP);
 
   reset();
 }
@@ -39,7 +36,7 @@ WaveformGenerator::WaveformGenerator()
 // ----------------------------------------------------------------------------
 // Set sync source.
 // ----------------------------------------------------------------------------
-void WaveformGenerator::set_sync_source(WaveformGenerator* source)
+void WaveformGeneratorFP::set_sync_source(WaveformGeneratorFP* source)
 {
   sync_source = source;
   source->sync_dest = this;
@@ -49,9 +46,9 @@ void WaveformGenerator::set_sync_source(WaveformGenerator* source)
 // ----------------------------------------------------------------------------
 // Set chip model.
 // ----------------------------------------------------------------------------
-void WaveformGenerator::set_chip_model(chip_model model)
+void WaveformGeneratorFP::set_chip_model(chip_model model)
 {
-  if (model == MOS6581) {
+  if (model == MOS6581FP) {
     wave__ST = wave6581__ST;
     wave_P_T = wave6581_P_T;
     wave_PS_ = wave6581_PS_;
@@ -69,27 +66,32 @@ void WaveformGenerator::set_chip_model(chip_model model)
 // ----------------------------------------------------------------------------
 // Register functions.
 // ----------------------------------------------------------------------------
-void WaveformGenerator::writeFREQ_LO(reg8 freq_lo)
+void WaveformGeneratorFP::writeFREQ_LO(reg8 freq_lo)
 {
-  freq = freq & 0xff00 | freq_lo & 0x00ff;
+  freq = (freq & 0xff00) | (freq_lo & 0x00ff);
 }
 
-void WaveformGenerator::writeFREQ_HI(reg8 freq_hi)
+void WaveformGeneratorFP::writeFREQ_HI(reg8 freq_hi)
 {
-  freq = (freq_hi << 8) & 0xff00 | freq & 0x00ff;
+  freq = ((freq_hi << 8) & 0xff00) | (freq & 0x00ff);
 }
 
-void WaveformGenerator::writePW_LO(reg8 pw_lo)
+/* The original form was (acc >> 12) >= pw, where truth value is not affected
+ * by the contents of the low 12 bits. Therefore the lowest bits must be zero
+ * in the new formulation acc >= (pw << 12). */
+void WaveformGeneratorFP::writePW_LO(reg8 pw_lo)
 {
-  pw = pw & 0xf00 | pw_lo & 0x0ff;
+  pw = (pw & 0xf00) | (pw_lo & 0x0ff);
+  pw_acc_scale = pw << 12;
 }
 
-void WaveformGenerator::writePW_HI(reg8 pw_hi)
+void WaveformGeneratorFP::writePW_HI(reg8 pw_hi)
 {
-  pw = (pw_hi << 8) & 0xf00 | pw & 0x0ff;
+  pw = ((pw_hi << 8) & 0xf00) | (pw & 0x0ff);
+  pw_acc_scale = pw << 12;
 }
 
-void WaveformGenerator::writeCONTROL_REG(reg8 control)
+void WaveformGeneratorFP::writeCONTROL_REG(reg8 control)
 {
   waveform = (control >> 4) & 0x0f;
   ring_mod = control & 0x04;
@@ -97,56 +99,53 @@ void WaveformGenerator::writeCONTROL_REG(reg8 control)
 
   reg8 test_next = control & 0x08;
 
-  // Test bit set.
-  // The accumulator and the shift register are both cleared.
-  // NB! The shift register is not really cleared immediately. It seems like
-  // the individual bits in the shift register start to fade down towards
-  // zero when test is set. All bits reach zero within approximately
-  // $2000 - $4000 cycles.
-  // This is not modeled. There should fortunately be little audible output
-  // from this peculiar behavior.
-  if (test_next) {
+  /* SounDemoN found out that test bit can be used to control the noise
+   * register. Hear the result in Bojojoing.sid. */
+
+  // testbit set. invert bit 19 and write it to bit 1
+  if (test_next && !test) {
     accumulator = 0;
-    shift_register = 0;
+    reg24 bit19 = (shift_register >> 19) & 1;
+    shift_register = (shift_register & 0x7ffffd) | ((bit19^1) << 1);
+    noise_overwrite_delay = 200000; /* 200 ms, probably too generous? */
   }
   // Test bit cleared.
   // The accumulator starts counting, and the shift register is reset to
   // the value 0x7ffff8.
-  // NB! The shift register will not actually be set to this exact value if the
-  // shift register bits have not had time to fade to zero.
-  // This is not modeled.
-  else if (test) {
-    shift_register = 0x7ffff8;
+  else if (!test_next && test) {
+    reg24 bit0 = ((shift_register >> 22) ^ (shift_register >> 17)) & 0x1;
+    shift_register <<= 1;
+    shift_register |= bit0;
+  }
+  // clear output bits of shift register if noise and other waveforms
+  // are selected simultaneously
+  if (waveform > 8) {
+    shift_register &= 0x7fffff^(1<<22)^(1<<20)^(1<<16)^(1<<13)^(1<<11)^(1<<7)^(1<<4)^(1<<2);
   }
 
   test = test_next;
-
-  // The gate bit is handled by the EnvelopeGenerator.
+  
+  /* update noise anyway, just in case the above paths triggered */
+  noise_output_cached = outputN___();
 }
 
-reg8 WaveformGenerator::readOSC()
+reg8 WaveformGeneratorFP::readOSC()
 {
   return output() >> 4;
-}
-
-void WaveformGenerator::writeACC_HI(reg8 value)
-{
-  accumulator = (value << 16) | (accumulator & 0xffff);
 }
 
 // ----------------------------------------------------------------------------
 // SID reset.
 // ----------------------------------------------------------------------------
-void WaveformGenerator::reset()
+void WaveformGeneratorFP::reset()
 {
   accumulator = 0;
-  shift_register = 0x7ffff8;
+  previous = 0;
+  shift_register = 0x7ffffc;
   freq = 0;
   pw = 0;
-
+  pw_acc_scale = 0;
   test = 0;
-  ring_mod = 0;
-  sync = 0;
-
+  writeCONTROL_REG(0);
   msb_rising = false;
 }
