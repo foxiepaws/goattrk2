@@ -96,7 +96,11 @@ int fileselector(char *name, char *path, char *filter, char *title, int filemode
   #endif
 
   // Process directory
+  #ifdef __amigaos__
+  dir = opendir("");
+  #else
   dir = opendir(".");
+  #endif
   if (dir)
   {
     char *filtptr = strstr(filter, "*");
@@ -267,7 +271,11 @@ int fileselector(char *name, char *path, char *filter, char *title, int filemode
       case KEY_BACKSPACE:
       if (!filemode)
       {
+      #ifdef __amigaos__
+        chdir("/");
+      #else
         chdir("..");
+      #endif
         goto NEWPATH;
       }
       break;

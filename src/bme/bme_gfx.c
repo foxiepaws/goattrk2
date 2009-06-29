@@ -463,12 +463,12 @@ void gfx_drawsprite(int x, int y, unsigned num)
     unsigned spr = (num & 0xffff) - 1;
     SPRITEHEADER *hptr;
 
-    if (!gfx_initted) return;
-    if (!gfx_locked) return;
-
     Uint8 *sptr;
     Uint8 *dptr;
     int cx;
+
+    if (!gfx_initted) return;
+    if (!gfx_locked) return;
 
     if ((sprf >= gfx_maxspritefiles) || (!gfx_spriteheaders[sprf]) ||
         (spr >= gfx_spriteamount[sprf]))

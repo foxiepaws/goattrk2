@@ -164,10 +164,12 @@ int sound_init(unsigned b, unsigned mr, unsigned writer, unsigned hardsid, unsig
       catweaselfd = open("/dev/misc/sid", O_WRONLY);
     if (catweaselfd < 0)
       return 0;
+    #ifndef __amigaos__
     if (ntsc)
       ioctl(catweaselfd, CWSID_IOCTL_NTSC);
     else
       ioctl(catweaselfd, CWSID_IOCTL_PAL);
+    #endif
     #endif
 
     usecatweasel = 1;

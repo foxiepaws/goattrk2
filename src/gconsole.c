@@ -272,10 +272,10 @@ void fliptoscreen(void)
   	{
   	  int sy = oldmousepixely >> 4;
   	  int ey = (oldmousepixely + MOUSESIZEY - 1) >> 4;
-  	  if (ey >= MAX_ROWS) ey = MAX_ROWS - 1;
-
   	  int sx = oldmousepixelx >> 3;
   	  int ex = (oldmousepixelx + MOUSESIZEX - 1) >> 3;
+
+  	  if (ey >= MAX_ROWS) ey = MAX_ROWS - 1;
   	  if (ex >= MAX_COLUMNS) ex = MAX_COLUMNS - 1;
 
   	  for (y = sy; y <= ey; y++)

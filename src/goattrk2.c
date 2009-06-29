@@ -76,7 +76,7 @@ char instrfilter[MAX_FILENAME];
 char instrpath[MAX_PATHNAME];
 char packedpath[MAX_PATHNAME];
 
-char *programname = "GoatTracker v2.68";
+char *programname = "$VER: GoatTracker v2.68";
                                       
 char textbuffer[MAX_PATHNAME];
 
@@ -91,6 +91,7 @@ int main(int argc, char **argv)
   FILE *configfile;
   int c,d;
 
+  programname += sizeof "$VER:";
   // Open datafile
   io_openlinkeddatafile(datafile);
 
@@ -100,6 +101,8 @@ int main(int argc, char **argv)
   filename[strlen(filename)-3] = 'c';
   filename[strlen(filename)-2] = 'f';
   filename[strlen(filename)-1] = 'g';
+  #elif __amigaos__
+  strcpy(filename, "PROGDIR:goattrk2.cfg");
   #else
   strcpy(filename, getenv("HOME"));
   strcat(filename, "/.goattrk/goattrk2.cfg");
@@ -331,10 +334,14 @@ int main(int argc, char **argv)
 
   // Save configuration
   #ifndef __WIN32__
+  #ifdef __amigaos__
+  strcpy(filename, "PROGDIR:goattrk2.cfg");
+  #else
   strcpy(filename, getenv("HOME"));
   strcat(filename, "/.goattrk");
   mkdir(filename, S_IRUSR | S_IWUSR | S_IXUSR);
   strcat(filename, "/goattrk2.cfg");
+  #endif
   #endif
   configfile = fopen(filename, "wt");
   if (configfile)
