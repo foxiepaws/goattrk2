@@ -1,5 +1,5 @@
 //
-// GOATTRACKER v2.68
+// GOATTRACKER v2.69
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -65,7 +65,6 @@ unsigned residdelay = 0;
 unsigned hardsidbufinteractive = 20;
 unsigned hardsidbufplayback = 400;
 
-char *configptr;
 char configbuf[MAX_PATHNAME];
 char loadedsongfilename[MAX_FILENAME];
 char songfilename[MAX_FILENAME];
@@ -76,7 +75,7 @@ char instrfilter[MAX_FILENAME];
 char instrpath[MAX_PATHNAME];
 char packedpath[MAX_PATHNAME];
 
-char *programname = "$VER: GoatTracker v2.68";
+char *programname = "$VER: GoatTracker v2.69";
                                       
 char textbuffer[MAX_PATHNAME];
 
@@ -108,7 +107,6 @@ int main(int argc, char **argv)
   strcat(filename, "/.goattrk/goattrk2.cfg");
   #endif
   configfile = fopen(filename, "rt");
-  configptr = NULL;
   if (configfile)
   {
     getparam(configfile, &b);
@@ -135,6 +133,16 @@ int main(int argc, char **argv)
     getparam(configfile, &customclockrate);
     getparam(configfile, &hardsidbufinteractive);
     getparam(configfile, &hardsidbufplayback);
+    getfloatparam(configfile, &filterparams.distortionrate);
+    getfloatparam(configfile, &filterparams.distortionpoint);
+    getfloatparam(configfile, &filterparams.distortioncfthreshold);
+    getfloatparam(configfile, &filterparams.type3baseresistance);
+    getfloatparam(configfile, &filterparams.type3offset);
+    getfloatparam(configfile, &filterparams.type3steepness);
+    getfloatparam(configfile, &filterparams.type3minimumfetresistance);
+    getfloatparam(configfile, &filterparams.type4k);
+    getfloatparam(configfile, &filterparams.type4b);
+    getfloatparam(configfile, &filterparams.voicenonlinearity);
     fclose(configfile);
   }
   zeropageadr &= 0xff;
@@ -374,7 +382,17 @@ int main(int argc, char **argv)
                         ";Random reSID write delay in cycles (0 = off)\n%d\n\n"
                         ";Custom SID clock cycles per second (0 = use PAL/NTSC default)\n%d\n\n"
                         ";HardSID interactive mode buffer size (in milliseconds, 0 = maximum/no flush)\n%d\n\n"
-                        ";HardSID playback mode buffer size (in milliseconds, 0 = maximum/no flush)\n%d\n\n",
+                        ";HardSID playback mode buffer size (in milliseconds, 0 = maximum/no flush)\n%d\n\n"
+                        ";reSID-fp distortion rate\n%f\n\n"
+                        ";reSID-fp distortion point\n%f\n\n"
+                        ";reSID-fp distortion CF threshold\n%f\n\n"
+                        ";reSID-fp type 3 base resistance\n%f\n\n"
+                        ";reSID-fp type 3 base offset\n%f\n\n"
+                        ";reSID-fp type 3 base steepness\n%f\n\n"
+                        ";reSID-fp type 3 minimum FET resistance\n%f\n\n"
+                        ";reSID-fp type 4 k\n%f\n\n"
+                        ";reSID-fp type 4 b\n%f\n\n"
+                        ";reSID-fp voice nonlinearity\n%f\n\n",
     b,
     mr,
     hardsid,
@@ -398,8 +416,17 @@ int main(int argc, char **argv)
     residdelay,
     customclockrate,
     hardsidbufinteractive,
-    hardsidbufplayback);
-
+    hardsidbufplayback,
+    filterparams.distortionrate,
+    filterparams.distortionpoint,
+    filterparams.distortioncfthreshold,
+    filterparams.type3baseresistance,
+    filterparams.type3offset,
+    filterparams.type3steepness,
+    filterparams.type3minimumfetresistance,
+    filterparams.type4k,
+    filterparams.type4b,
+    filterparams.voicenonlinearity);
     fclose(configfile);
   }
 
@@ -1238,18 +1265,12 @@ void getparam(FILE *handle, unsigned *value)
 {
   for (;;)
   {
-    while (!configptr)
-    {
-      if (feof(handle)) return;
-      fgets(configbuf, MAX_PATHNAME, handle);
-      if ((configbuf[0]) && (configbuf[0] != ';')) configptr = configbuf;
-    }
-
-    if ((*configptr == '$') || ((*configptr >= '0') && (*configptr <= '9'))) break;
-    if (!(*configptr)) configptr = NULL;
-    else configptr++;
+    if (feof(handle)) return;
+    fgets(configbuf, MAX_PATHNAME, handle);
+    if ((configbuf[0]) && (configbuf[0] != ';') && (configbuf[0] != ' ') && (configbuf[0] != 13) && (configbuf[0] != 10)) break;
   }
 
+  char *configptr = configbuf;
   if (*configptr == '$')
   {
     *value = 0;
@@ -1288,10 +1309,21 @@ void getparam(FILE *handle, unsigned *value)
       else break;
     }
   }
-
-  if (!(*configptr)) configptr = NULL;
 }
 
+void getfloatparam(FILE *handle, float *value)
+{
+  for (;;)
+  {
+    if (feof(handle)) return;
+    fgets(configbuf, MAX_PATHNAME, handle);
+    if ((configbuf[0]) && (configbuf[0] != ';') && (configbuf[0] != ' ') && (configbuf[0] != 13) && (configbuf[0] != 10)) break;
+  }
+
+  char *configptr = configbuf;
+  *value = 0.0f;
+  sscanf(configptr, "%f", value);
+}
 
 void prevmultiplier(void)
 {

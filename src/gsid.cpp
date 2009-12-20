@@ -5,8 +5,9 @@
 #define GSID_C
 
 #include <stdlib.h>
+#include <stdio.h>
 #include "resid/sid.h"
-#include "resid-fp/sid.h"
+#include "resid-fp/sidfp.h"
 
 extern "C" {
 
@@ -30,6 +31,21 @@ unsigned char altsidorder[] =
 
 SID *sid = 0;
 SIDFP *sidfp = 0;
+
+FILTERPARAMS defaultfilterparams =
+  {0.50f, 3.3e6f, 1.0e-4f,
+   1147036.4394268463f, 274228796.97550374f, 1.0066634233403395f, 16125.154840564108f,
+   5.5f, 20.f,
+   0.9613160610660189f};
+   
+FILTERPARAMS filterparams =
+  {0.50f, 3.3e6f, 1.0e-4f,
+   1147036.4394268463f, 274228796.97550374f, 1.0066634233403395f, 16125.154840564108f,
+   5.5f, 20.f,
+   0.9613160610660189f};
+   
+
+
 
 extern unsigned residdelay;
 extern unsigned adparam;
@@ -70,13 +86,13 @@ void sid_init(int speed, unsigned m, unsigned ntsc, unsigned interpolate, unsign
   switch(interpolate)
   {
     case 0:
-    if (sid) sid->set_sampling_parameters(clockrate, SAMPLE_FAST, speed, 20000);
-    if (sidfp) sidfp->set_sampling_parameters(clockrate, SAMPLE_FAST, speed, 20000);
+    if (sid) sid->set_sampling_parameters(clockrate, SAMPLE_FAST, speed);
+    if (sidfp) sidfp->set_sampling_parameters(clockrate, SAMPLE_INTERPOLATE, speed);
     break;
 
     default:
-    if (sid) sid->set_sampling_parameters(clockrate, SAMPLE_INTERPOLATE, speed, 20000);
-    if (sidfp) sidfp->set_sampling_parameters(clockrate, SAMPLE_INTERPOLATE, speed, 20000);
+    if (sid) sid->set_sampling_parameters(clockrate, SAMPLE_INTERPOLATE, speed);
+    if (sidfp) sidfp->set_sampling_parameters(clockrate, SAMPLE_RESAMPLE_INTERPOLATE, speed);
     break;
   }
 
@@ -89,12 +105,52 @@ void sid_init(int speed, unsigned m, unsigned ntsc, unsigned interpolate, unsign
   if (m == 1)
   {
     if (sid) sid->set_chip_model(MOS8580);
-    if (sidfp) sidfp->set_chip_model(MOS8580FP);
+    if (sidfp) sidfp->set_chip_model(MOS8580);
   }
   else
   {
     if (sid) sid->set_chip_model(MOS6581);
-    if (sidfp) sidfp->set_chip_model(MOS6581FP);
+    if (sidfp) sidfp->set_chip_model(MOS6581);
+  }
+  
+  // Restore any zero resid-fp filter parameter from default config
+  if (filterparams.distortionrate == 0.0f)
+    filterparams.distortionrate = defaultfilterparams.distortionrate;
+  if (filterparams.distortionpoint == 0.0f)
+    filterparams.distortionpoint = defaultfilterparams.distortionpoint;
+  if (filterparams.distortioncfthreshold == 0.0f)
+    filterparams.distortioncfthreshold = defaultfilterparams.distortioncfthreshold;
+  if (filterparams.type3baseresistance == 0.0f)
+    filterparams.type3baseresistance = defaultfilterparams.type3baseresistance;
+  if (filterparams.type3offset == 0.0f)
+    filterparams.type3offset = defaultfilterparams.type3offset;
+  if (filterparams.type3steepness == 0.0f)
+    filterparams.type3steepness = defaultfilterparams.type3steepness;
+  if (filterparams.type3minimumfetresistance == 0.0f)
+    filterparams.type3minimumfetresistance = defaultfilterparams.type3minimumfetresistance;
+  if (filterparams.type4k == 0.0f)
+    filterparams.type4k = defaultfilterparams.type4k;
+  if (filterparams.type4b == 0.0f)
+    filterparams.type4b = defaultfilterparams.type4b;
+  if (filterparams.voicenonlinearity == 0.0f)
+    filterparams.voicenonlinearity = defaultfilterparams.voicenonlinearity;
+
+  if (sidfp)
+  {
+    sidfp->get_filter().set_distortion_properties(
+      filterparams.distortionrate,
+      filterparams.distortionpoint,
+      filterparams.distortioncfthreshold);
+    sidfp->get_filter().set_type3_properties(
+      filterparams.type3baseresistance,
+      filterparams.type3offset,
+      filterparams.type3steepness,
+      filterparams.type3minimumfetresistance);
+    sidfp->get_filter().set_type4_properties(
+      filterparams.type4k,
+      filterparams.type4b);
+    sidfp->set_voice_nonlinearity(
+      filterparams.voicenonlinearity);
   }
 }
 
@@ -116,7 +172,7 @@ int sid_fillbuffer(short *ptr, int samples)
 
   int badline = rand() % NUMSIDREGS;
 
-  tdelta = clockrate * samples / samplerate + 4;
+  tdelta = clockrate * samples / samplerate;
 
   for (c = 0; c < NUMSIDREGS; c++)
   {
@@ -160,6 +216,19 @@ int sid_fillbuffer(short *ptr, int samples)
   if (sid) result = sid->clock(tdelta, ptr, samples);
   if (sidfp) result = sidfp->clock(tdelta, ptr, samples);
   total += result;
+  ptr += result;
+  samples -= result;
+  
+  // Hack: loop extra cycles until all samples produced
+  while (samples)
+  {
+    tdelta = clockrate * samples / samplerate;
+    if (sid) result = sid->clock(tdelta, ptr, samples);
+    if (sidfp) result = sidfp->clock(tdelta, ptr, samples);
+    total += result;
+    ptr += result;
+    samples -= result;
+  }
 
   return total;
 }

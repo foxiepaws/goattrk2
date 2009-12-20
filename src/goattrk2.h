@@ -77,7 +77,6 @@ extern unsigned catweasel;
 extern unsigned interpolate;
 extern unsigned hardsidbufinteractive;
 extern unsigned hardsidbufplayback;
-extern char *configptr;
 extern char configbuf[MAX_PATHNAME];
 extern char loadedsongfilename[MAX_FILENAME];
 extern char songfilename[MAX_FILENAME];
@@ -94,6 +93,7 @@ extern unsigned char datafile[];
 #endif
 
 void getparam(FILE *handle, unsigned *value);
+void getfloatparam(FILE *handle, float *value);
 void waitkey(void);
 void waitkeymouse(void);
 void waitkeynoupdate(void);
