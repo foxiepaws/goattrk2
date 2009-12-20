@@ -43,9 +43,6 @@ FILTERPARAMS filterparams =
    1147036.4394268463f, 274228796.97550374f, 1.0066634233403395f, 16125.154840564108f,
    5.5f, 20.f,
    0.9613160610660189f};
-   
-
-
 
 extern unsigned residdelay;
 extern unsigned adparam;
@@ -219,7 +216,7 @@ int sid_fillbuffer(short *ptr, int samples)
   ptr += result;
   samples -= result;
   
-  // Hack: loop extra cycles until all samples produced
+  // Loop extra cycles until all samples produced
   while (samples)
   {
     tdelta = clockrate * samples / samplerate;

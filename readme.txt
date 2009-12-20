@@ -1,4 +1,4 @@
-GoatTracker v2.68
+GoatTracker v2.69
 -----------------
 
 Editor by Lasse Öörni (loorni@gmail.com)
@@ -1847,3 +1847,7 @@ v2.68     - Fixed set tempo -command overwriting frequencytable in 1 or 2
             Lankila integrated. Activated with /I command line option parameters
             2 & 3.
           - Command quick reference by Simon Bennett included.
+          
+v2.69     - Fixed click bug in reSID audio output.
+          - Newest reSID-fp code integrated.
+          - reSID-fp filter parameters adjustable from the configuration file.
