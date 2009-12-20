@@ -132,11 +132,11 @@ Filter::Filter()
 
   // Create mappings from FC to cutoff frequency.
   interpolate(f0_points_6581, f0_points_6581
-	      + sizeof(f0_points_6581)/sizeof(*f0_points_6581) - 1,
-	      PointPlotter<sound_sample>(f0_6581), 1.0);
+        + sizeof(f0_points_6581)/sizeof(*f0_points_6581) - 1,
+        PointPlotter<sound_sample>(f0_6581), 1.0);
   interpolate(f0_points_8580, f0_points_8580
-	      + sizeof(f0_points_8580)/sizeof(*f0_points_8580) - 1,
-	      PointPlotter<sound_sample>(f0_8580), 1.0);
+        + sizeof(f0_points_8580)/sizeof(*f0_points_8580) - 1,
+        PointPlotter<sound_sample>(f0_8580), 1.0);
 
   set_chip_model(MOS6581);
 }
@@ -156,7 +156,7 @@ void Filter::enable_filter(bool enable)
 // ----------------------------------------------------------------------------
 void Filter::set_chip_model(chip_model model)
 {
-  if ((model == MOS6581)) {
+  if (model == MOS6581) {
     // The mixer has a small input DC offset. This is found as follows:
     //
     // The "zero" output level of the mixer measured on the SID audio

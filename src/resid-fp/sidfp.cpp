@@ -20,6 +20,8 @@
 #include "sidfp.h"
 #include <math.h>
 
+#define RINGSIZE 2048
+
 #ifdef __SSE__
 #include <xmmintrin.h>
 #endif

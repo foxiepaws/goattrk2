@@ -77,9 +77,6 @@ private:
   // External audio input.
   float ext_in;
 
-  // Resampling constants.
-  enum { RINGSIZE = 2048 };
-
   // Sampling variables.
   sampling_method sampling;
   float cycles_per_sample;

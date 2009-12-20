@@ -112,7 +112,7 @@ void ExternalFilter::clock(sound_sample Vi)
 // ----------------------------------------------------------------------------
 RESID_INLINE
 void ExternalFilter::clock(cycle_count delta_t,
-			   sound_sample Vi)
+         sound_sample Vi)
 {
   // This is handy for testing.
   if (!enabled) {

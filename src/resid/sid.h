@@ -16,9 +16,6 @@
 //  along with this program; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //  ---------------------------------------------------------------------------
-// C64 DTV modifications written by
-//   Daniel Kahlin <daniel@kahlin.net>
-// Copyright (C) 2007  Daniel Kahlin <daniel@kahlin.net>
 
 #ifndef __SID_H__
 #define __SID_H__
@@ -39,8 +36,8 @@ public:
   void enable_filter(bool enable);
   void enable_external_filter(bool enable);
   bool set_sampling_parameters(double clock_freq, sampling_method method,
-			       double sample_freq, double pass_freq = -1,
-			       double filter_scale = 0.97);
+             double sample_freq, double pass_freq = -1,
+             double filter_scale = 0.97);
   void adjust_sampling_frequency(double sample_freq);
 
   void fc_default(const fc_point*& points, int& count);
@@ -91,13 +88,13 @@ public:
 protected:
   static double I0(double x);
   RESID_INLINE int clock_fast(cycle_count& delta_t, short* buf, int n,
-			      int interleave);
+            int interleave);
   RESID_INLINE int clock_interpolate(cycle_count& delta_t, short* buf, int n,
-				     int interleave);
+             int interleave);
   RESID_INLINE int clock_resample_interpolate(cycle_count& delta_t, short* buf,
-					      int n, int interleave);
+                int n, int interleave);
   RESID_INLINE int clock_resample_fast(cycle_count& delta_t, short* buf,
-				       int n, int interleave);
+               int n, int interleave);
 
   Voice voice[3];
   Filter filter;
@@ -110,27 +107,8 @@ protected:
 
   double clock_frequency;
 
-  bool is_dtv;
-
   // External audio input.
   int ext_in;
-
-  // Resampling constants.
-  // The error in interpolated lookup is bounded by 1.234/L^2,
-  // while the error in non-interpolated lookup is bounded by
-  // 0.7854/L + 0.4113/L^2, see
-  // http://www-ccrma.stanford.edu/~jos/resample/Choice_Table_Size.html
-  // For a resolution of 16 bits this yields L >= 285 and L >= 51473,
-  // respectively.
-  enum { FIR_N = 125 };
-  enum { FIR_RES_INTERPOLATE = 285 };
-  enum { FIR_RES_FAST = 51473 };
-  enum { FIR_SHIFT = 15 };
-  enum { RINGSIZE = 16384 };
-
-  // Fixpoint constants (16.16 bits).
-  enum { FIXP_SHIFT = 16 };
-  enum { FIXP_MASK = 0xffff };
 
   // Sampling variables.
   sampling_method sampling;
