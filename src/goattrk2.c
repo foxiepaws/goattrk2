@@ -1263,6 +1263,8 @@ void editadsr(void)
 
 void getparam(FILE *handle, unsigned *value)
 {
+  char *configptr;
+
   for (;;)
   {
     if (feof(handle)) return;
@@ -1270,7 +1272,7 @@ void getparam(FILE *handle, unsigned *value)
     if ((configbuf[0]) && (configbuf[0] != ';') && (configbuf[0] != ' ') && (configbuf[0] != 13) && (configbuf[0] != 10)) break;
   }
 
-  char *configptr = configbuf;
+  configptr = configbuf;
   if (*configptr == '$')
   {
     *value = 0;
@@ -1313,6 +1315,8 @@ void getparam(FILE *handle, unsigned *value)
 
 void getfloatparam(FILE *handle, float *value)
 {
+  char *configptr;
+
   for (;;)
   {
     if (feof(handle)) return;
@@ -1320,7 +1324,7 @@ void getfloatparam(FILE *handle, float *value)
     if ((configbuf[0]) && (configbuf[0] != ';') && (configbuf[0] != ' ') && (configbuf[0] != 13) && (configbuf[0] != 10)) break;
   }
 
-  char *configptr = configbuf;
+  configptr = configbuf;
   *value = 0.0f;
   sscanf(configptr, "%f", value);
 }
