@@ -116,8 +116,7 @@ int sound_init(unsigned b, unsigned mr, unsigned writer, unsigned hardsid, unsig
     {
       usehardsid = hardsid;
 	  if (cycleexacthardsid) {
-        if (HardSID_Lock)
-		  HardSID_Lock(usehardsid-1);
+	    HardSID_Lock(usehardsid-1);
         HardSID_Flush(usehardsid-1);
 		HardSID_Write(usehardsid-1, SIDWRITEDELAY, 0, 0x00);
 		Sleep(300);
@@ -522,7 +521,8 @@ void InitHardDLL()
   HardSID_Flush = (lpHardSID_Flush) GetProcAddress(hardsiddll, "HardSID_Flush");
   HardSID_SoftFlush = (lpHardSID_SoftFlush) GetProcAddress(hardsiddll, "HardSID_SoftFlush");
   HardSID_Lock = (lpHardSID_Lock) GetProcAddress(hardsiddll, "HardSID_Lock");
-  if ((HardSID_Delay) && (HardSID_Write)) cycleexacthardsid = TRUE;
+  if ((HardSID_Delay) && (HardSID_Write) && (HardSID_Flush) && (HardSID_SoftFlush) && (HardSID_Lock))
+    cycleexacthardsid = TRUE;
 
   InitHardSID_Mapper();
   dll_initialized = TRUE;
