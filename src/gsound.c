@@ -35,6 +35,7 @@ typedef void (CALLBACK* lpHardSID_Delay)(Uint8 DeviceID, Uint16 Cycles);
 typedef void (CALLBACK* lpHardSID_Write)(Uint8 DeviceID, Uint16 Cycles, Uint8 SID_reg, Uint8 Data);
 typedef void (CALLBACK* lpHardSID_Flush)(Uint8 DeviceID);
 typedef void (CALLBACK* lpHardSID_SoftFlush)(Uint8 DeviceID);
+typedef boolean (CALLBACK* lpHardSID_Lock)(Uint8 DeviceID);
 lpWriteToHardSID WriteToHardSID = NULL;
 lpReadFromHardSID ReadFromHardSID = NULL;
 lpInitHardSID_Mapper InitHardSID_Mapper = NULL;
@@ -43,6 +44,7 @@ lpHardSID_Delay HardSID_Delay = NULL;
 lpHardSID_Write HardSID_Write = NULL;
 lpHardSID_Flush HardSID_Flush = NULL;
 lpHardSID_SoftFlush HardSID_SoftFlush = NULL;
+lpHardSID_Lock HardSID_Lock = NULL;
 HINSTANCE hardsiddll = 0;
 int dll_initialized = FALSE;
 // Cycle-exact HardSID support
@@ -113,12 +115,28 @@ int sound_init(unsigned b, unsigned mr, unsigned writer, unsigned hardsid, unsig
     if (dll_initialized)
     {
       usehardsid = hardsid;
+	  if (cycleexacthardsid) {
+		HardSID_Lock(usehardsid-1);
+        HardSID_Flush(usehardsid-1);
+		HardSID_Write(usehardsid-1, SIDWRITEDELAY, 0, 0x00);
+		Sleep(300);
+	  }
       for (c = 0; c < NUMSIDREGS; c++)
       {
         sidreg[c] = 0;
-        WriteToHardSID(usehardsid-1, c, 0x00);
+		if (cycleexacthardsid) {
+			HardSID_Write(usehardsid-1, SIDWRITEDELAY, c, 0x00);
+		}
+		else {
+			WriteToHardSID(usehardsid-1, c, 0x00);
+		}
       }
-      MuteHardSID_Line(FALSE);
+      if (cycleexacthardsid) {
+        HardSID_SoftFlush(usehardsid-1);
+	  }
+	  else {
+        MuteHardSID_Line(FALSE);
+	  }
     }
     else return 0;
     if (!cycleexacthardsid)
@@ -256,7 +274,12 @@ void sound_uninit(void)
     #ifdef __WIN32__
     for (c = 0; c < NUMSIDREGS; c++)
     {
-      WriteToHardSID(usehardsid-1, c, 0x00);
+		if (cycleexacthardsid) {
+			HardSID_Write(usehardsid-1, SIDWRITEDELAY, c, 0x00);
+		}
+		else {
+			WriteToHardSID(usehardsid-1, c, 0x00);
+		}
     }
     MuteHardSID_Line(TRUE);
     #else
@@ -422,7 +445,12 @@ void sound_playrout(void)
     for (c = 0; c < NUMSIDREGS; c++)
     {
       unsigned o = sid_getorder(c);
-      WriteToHardSID(usehardsid-1, o, sidreg[o]);
+		if (cycleexacthardsid) {
+			HardSID_Write(usehardsid-1, SIDWRITEDELAY, o, sidreg[o]);
+		}
+		else {
+			WriteToHardSID(usehardsid-1, o, sidreg[o]);
+		}
     }
     #else
     for (c = 0; c < NUMSIDREGS; c++)
@@ -492,6 +520,7 @@ void InitHardDLL()
   HardSID_Write = (lpHardSID_Write) GetProcAddress(hardsiddll, "HardSID_Write");
   HardSID_Flush = (lpHardSID_Flush) GetProcAddress(hardsiddll, "HardSID_Flush");
   HardSID_SoftFlush = (lpHardSID_SoftFlush) GetProcAddress(hardsiddll, "HardSID_SoftFlush");
+  HardSID_Lock = (lpHardSID_Lock) GetProcAddress(hardsiddll, "HardSID_Lock");
   if ((HardSID_Delay) && (HardSID_Write)) cycleexacthardsid = TRUE;
 
   InitHardSID_Mapper();
