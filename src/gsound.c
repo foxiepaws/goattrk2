@@ -116,7 +116,8 @@ int sound_init(unsigned b, unsigned mr, unsigned writer, unsigned hardsid, unsig
     {
       usehardsid = hardsid;
 	  if (cycleexacthardsid) {
-		HardSID_Lock(usehardsid-1);
+        if (HardSID_Lock)
+		  HardSID_Lock(usehardsid-1);
         HardSID_Flush(usehardsid-1);
 		HardSID_Write(usehardsid-1, SIDWRITEDELAY, 0, 0x00);
 		Sleep(300);
