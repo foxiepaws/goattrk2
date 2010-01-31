@@ -1853,3 +1853,4 @@ v2.69     - Fixed click bug in reSID audio output.
           - reSID-fp filter parameters adjustable from the configuration file.
           
 v2.70     - Hotfix for the new HardSID UPlay/Uno devices from Téli Sándor.
+          - Fixed possible crash on some versions of the HardSID dll.
