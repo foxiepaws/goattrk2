@@ -50,8 +50,13 @@ int initscreen(void)
   win_setmousemode(MOUSE_ALWAYS_HIDDEN);
   initicon();
 
-  if (!gfx_init(MAX_COLUMNS * 8, MAX_ROWS * 16, 60, GFX_WINDOW)) return 0;
-
+  if (!gfx_init(MAX_COLUMNS * 8, MAX_ROWS * 16, 60, 0))
+  {
+    win_fullscreen = 0;
+    if (!gfx_init(MAX_COLUMNS * 8, MAX_ROWS * 16, 60, 0))
+      return 0;
+  }
+   
   scrbuffer = malloc(MAX_COLUMNS * MAX_ROWS * sizeof(unsigned));
   prevscrbuffer = malloc(MAX_COLUMNS * MAX_ROWS * sizeof(unsigned));
   if ((!scrbuffer) || (!prevscrbuffer)) return 0;
@@ -91,8 +96,8 @@ void initicon(void)
   	iconbuffer = malloc(size);
   	if (iconbuffer)
   	{
-    	io_read(handle, iconbuffer, size);
-    	io_close(handle);
+      io_read(handle, iconbuffer, size);
+      io_close(handle);
       rw = SDL_RWFromMem(iconbuffer, size);
       icon = SDL_LoadBMP_RW(rw, 0);
       SDL_WM_SetIcon(icon, 0);
@@ -404,10 +409,17 @@ void getkey(void)
       }
     }
   }
+
   shiftpressed = 0;
   if ((win_keystate[KEY_LEFTSHIFT])||(win_keystate[KEY_RIGHTSHIFT])||
       (win_keystate[KEY_CTRL])||(win_keystate[KEY_RIGHTCTRL]))
     shiftpressed = 1;
+
+  if (rawkey == SDLK_KP_ENTER)
+  {
+  	key = KEY_ENTER;
+  	rawkey = SDLK_RETURN;
+  }
 
   if (rawkey == SDLK_KP0) key = '0';
   if (rawkey == SDLK_KP1) key = '1';
