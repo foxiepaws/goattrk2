@@ -1124,7 +1124,7 @@ Some examples:
 -------------------------------
 
 4.1 INS2SND2.EXE
----------------
+----------------
 
 INS2SND2.EXE converts GoatTracker v1.xx or v2 instruments (.INS-files) into
 sound effects, outputting the data as source code or binary.
@@ -1437,7 +1437,7 @@ discarded.
 7. Recompiling
 --------------
 
-To recompile for Win32, you need the MinGW development enviroment, use the
+To recompile for Win32, you need the MinGW development environment, use the
 file src/makefile.win as makefile.
 
 To recompile for Linux, use src/makefile.
