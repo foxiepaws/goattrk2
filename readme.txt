@@ -194,51 +194,52 @@ programs.
 
 Start Goattracker V2 by typing GOATTRK2 in the command prompt, followed by the
 songname to be loaded at startup (optional) and any command line options you
-may want. For example "goattrk2 dojo.sng /s1 /e1" to set 1x-speed mode and SID
+may want. For example "goattrk2 dojo.sng -s1 -e1" to set 1x-speed mode and SID
 model 8580 and to load "dojo.sng" on startup.
 
-/Axx Set hard restart ADSR parameter in hex. DEFAULT=0F00
-/Bxx Set sound buffer length in milliseconds DEFAULT=100
-/Cxx Use CatWeasel MK3 PCI SID (0 = off, 1 = on)
-/Dxx Pattern row display (0 = decimal, 1 = hexadecimal)
-/Exx Set emulated SID model (0 = 6581 1 = 8580) DEFAULT=6581
-/Fxx Set custom SID clock cycles per second (0 = use PAL/NTSC default)
-/Hxx Use HardSID (0 = off, 1 = HardSID ID0 2 = HardSID ID1 etc.)
-/Ixx Set reSID interpolation (0 = off, 1 = on, 2 = distortion, 3 = distortion & on) DEFAULT=off
-/Kxx Note-entry mode (0 = PROTRACKER 1 = DMC) DEFAULT=PROTRK.
-/Lxx SID memory location in hex. DEFAULT=D400
-/Mxx Set sound mixing rate DEFAULT=44100
-/Oxx Set pulse optimization/skipping (0 = off, 1 = on) DEFAULT=on
-/Rxx Set realtime command optimization/skipping (0 = off, 1 = on) DEFAULT=on
-/Sxx Set speed multiplier (0 for 25Hz, 1 for 1x, 2 for 2x etc.)
-/Txx Set HardSID interactive mode sound buffer length in milliseconds
+-Axx Set hard restart ADSR parameter in hex. DEFAULT=0F00
+-Bxx Set sound buffer length in milliseconds DEFAULT=100
+-Cxx Use CatWeasel MK3 PCI SID (0 = off, 1 = on)
+-Dxx Pattern row display (0 = decimal, 1 = hexadecimal)
+-Exx Set emulated SID model (0 = 6581 1 = 8580) DEFAULT=6581
+-Fxx Set custom SID clock cycles per second (0 = use PAL/NTSC default)
+-Hxx Use HardSID (0 = off, 1 = HardSID ID0 2 = HardSID ID1 etc.)
+-Ixx Set reSID interpolation (0 = off, 1 = on, 2 = distortion, 3 = distortion & on) DEFAULT=off
+-Kxx Note-entry mode (0 = PROTRACKER 1 = DMC) DEFAULT=PROTRK.
+-Lxx SID memory location in hex. DEFAULT=D400
+-Mxx Set sound mixing rate DEFAULT=44100
+-Oxx Set pulse optimization/skipping (0 = off, 1 = on) DEFAULT=on
+-Rxx Set realtime command optimization/skipping (0 = off, 1 = on) DEFAULT=on
+-Sxx Set speed multiplier (0 for 25Hz, 1 for 1x, 2 for 2x etc.)
+-Txx Set HardSID interactive mode sound buffer length in milliseconds
      DEFAULT=20, max.buffering=0
-/Uxx Set HardSID playback mode sound buffer length in milliseconds
+-Uxx Set HardSID playback mode sound buffer length in milliseconds
      DEFAULT=400, max.buffering=0
-/Vxx Set finevibrato conversion (0 = off, 1 = on) DEFAULT=on
-/Zxx Set random reSID write delay in cycles (0 = off) DEFAULT=off
-/N   Use NTSC timing
-/P   Use PAL timing (DEFAULT)
-/W   Write emulated sound output to a file SIDAUDIO.RAW
-/?   Show command line options
+-Vxx Set finevibrato conversion (0 = off, 1 = on) DEFAULT=on
+-Zxx Set random reSID write delay in cycles (0 = off) DEFAULT=off
+-N   Use NTSC timing
+-P   Use PAL timing (DEFAULT)
+-W   Write emulated sound output to a file SIDAUDIO.RAW
+-?   Show command line options
+-??  Standalone online help window
 
 Try the command line options if there are any problems. For example, if you
-experience choppy audio you can increase audio buffering with /B option. SDL
+experience choppy audio you can increase audio buffering with -B option. SDL
 seems to have trouble with some soundcards under Windows; you might want to
 try even a 500ms buffer, or tweak the hardware acceleration level of the
 soundcard (from Control Panel). Also, reSID interpolation will take remarkably
 more CPU time and could cause the sound and/or editing to get choppy.
 
-Finevibrato mode is on by default. You can change this behaviour with /V
+Finevibrato mode is on by default. You can change this behaviour with -V
 option. Note that finevibrato mode only affects the conversion of old style
 vibrato parameters to speedtable format.
 
-Pulse optimization /O determines if pulsetable execution will be skipped when
+Pulse optimization -O determines if pulsetable execution will be skipped when
 getting new notes or a new pattern. By default it is on. Be warned that
 turning it off will increase the rastertime requirements of packed/relocated
 songs greatly!
 
-Realtime command optimization /R determines if portamento, vibrato & instrument
+Realtime command optimization -R determines if portamento, vibrato & instrument
 vibrato will be skipped on tick 0 of each pattern row. By default it is on, as
 this is how tracker programs have operated traditionally. Turning it off makes
 the commands sound same regardless of tempo but will increase rastertime use.
@@ -257,11 +258,11 @@ may change the characteristics of the note's decay & release.
 2.2 Hardware support
 --------------------
 
-HardSID support is available with the /H option (use first HardSID = /H1,
-second = /H2 etc., return to emulated output = /H0). You must have the HardSID
+HardSID support is available with the /H option (use first HardSID = -H1,
+second = -H2 etc., return to emulated output = -H0). You must have the HardSID
 drivers installed to use this feature.
 
-CatWeasel MK3 PCI SID support is available with /C option (/C1 to turn on).
+CatWeasel MK3 PCI SID support is available with -C option (-C1 to turn on).
 
 To use the PC64 cable, you need Daniel Illgen's HardSID-DLL-Clone. Available at
 http://dawork.synchronus.de/
@@ -276,7 +277,7 @@ For HardSID 4U -
 http://www.hardsid.com
 
 Cycle-exact HardSID buffer length is separately configurable for interactive
-mode (/T option) & playback mode (/U option).
+mode (-T option) & playback mode (-U option).
 
 HardSID interactive mode:
 Low latency mode for jamming and accurate GUI display. Interactive mode can
@@ -284,7 +285,7 @@ be activated during song/pattern playback by enabling jamming (space key).
 
 HardSID playback mode:
 High stability mode to avoid interruptions caused by other applications/poor
-drivers/weaker CPU. GUI display is less accurate in this mode. Set the /U
+drivers/weaker CPU. GUI display is less accurate in this mode. Set the -U
 parameter to zero to achieve the maximum stability (less accurate GUI).
 
 2.3 Keyboard commands

@@ -165,6 +165,10 @@ int main(int argc, char **argv)
         case '?':
         if (!initscreen())
           return 1;
+	if(argv[c][2]=='?') {
+	  onlinehelp(1,0);
+	  return 0;
+	}
         printtext(0,y++,15,"Usage: GOATTRK2 [songname] [options]");
         printtext(0,y++,15,"Options:");
         printtext(0,y++,15,"-Axx Set ADSR parameter for hardrestart in hex. DEFAULT=0F00");
@@ -190,6 +194,7 @@ int main(int argc, char **argv)
         printtext(0,y++,15,"-P   Use PAL timing (DEFAULT)");
         printtext(0,y++,15,"-W   Write sound output to a file SIDAUDIO.RAW");
         printtext(0,y++,15,"-?   Show this info again");
+        printtext(0,y++,15,"-??  Standalone online help window");	
         waitkeynoupdate();
         return 0;
 
@@ -819,7 +824,7 @@ void mousecommands(void)
       if ((mousex >= 49) && (mousex <= 57))
         relocator();
       if ((mousex >= 59) && (mousex <= 64))
-        onlinehelp();
+        onlinehelp(0,0);
       if ((mousex >= 66) && (mousex <= 72))
         clear();
       if ((mousex >= 74) && (mousex <= 79))
@@ -943,7 +948,7 @@ void generalcommands(void)
     break;
 
     case KEY_F12:
-    onlinehelp();
+      onlinehelp(0, shiftpressed);
     break;
 
     case KEY_TAB:

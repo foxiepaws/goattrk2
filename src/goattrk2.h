@@ -100,7 +100,7 @@ void waitkeynoupdate(void);
 void waitkeymousenoupdate(void);
 void converthex(void);
 void docommand(void);
-void onlinehelp(void);
+void onlinehelp(int standalone, int context);
 void mousecommands(void);
 void generalcommands(void);
 void load(void);
