@@ -86,16 +86,16 @@ void initicon(void)
   int handle = io_open("goattrk2.bmp");
   if (handle != -1)
   {
-  	SDL_RWops *rw;
-  	SDL_Surface *icon;
-  	char *iconbuffer;
+    SDL_RWops *rw;
+    SDL_Surface *icon;
+    char *iconbuffer;
     int size;
 
     size = io_lseek(handle, 0, SEEK_END);
-  	io_lseek(handle, 0, SEEK_SET);
-  	iconbuffer = malloc(size);
-  	if (iconbuffer)
-  	{
+    io_lseek(handle, 0, SEEK_SET);
+    iconbuffer = malloc(size);
+    if (iconbuffer)
+    {
       io_read(handle, iconbuffer, size);
       io_close(handle);
       rw = SDL_RWFromMem(iconbuffer, size);
@@ -119,8 +119,8 @@ void closescreen(void)
   }
   if (chardata)
   {
-  	free(chardata);
-  	chardata = NULL;
+    free(chardata);
+    chardata = NULL;
   }
 
   gfxinitted = 0;
@@ -273,19 +273,19 @@ void fliptoscreen(void)
   // Mark previous mousecursor area changed if mouse moved
   if ((mousepixelx != oldmousepixelx) || (mousepixely != oldmousepixely))
   {
-  	if ((oldmousepixelx >= 0) && (oldmousepixely >= 0))
-  	{
-  	  int sy = oldmousepixely >> 4;
-  	  int ey = (oldmousepixely + MOUSESIZEY - 1) >> 4;
-  	  int sx = oldmousepixelx >> 3;
-  	  int ex = (oldmousepixelx + MOUSESIZEX - 1) >> 3;
+    if ((oldmousepixelx >= 0) && (oldmousepixely >= 0))
+    {
+      int sy = oldmousepixely >> 4;
+      int ey = (oldmousepixely + MOUSESIZEY - 1) >> 4;
+      int sx = oldmousepixelx >> 3;
+      int ex = (oldmousepixelx + MOUSESIZEX - 1) >> 3;
 
-  	  if (ey >= MAX_ROWS) ey = MAX_ROWS - 1;
-  	  if (ex >= MAX_COLUMNS) ex = MAX_COLUMNS - 1;
+      if (ey >= MAX_ROWS) ey = MAX_ROWS - 1;
+      if (ex >= MAX_COLUMNS) ex = MAX_COLUMNS - 1;
 
-  	  for (y = sy; y <= ey; y++)
-  	  {
-  		  for (x = sx; x <= ex; x++)
+      for (y = sy; y <= ey; y++)
+      {
+        for (x = sx; x <= ex; x++)
           prevscrbuffer[y*MAX_COLUMNS+x] = 0xffffffff;
       }
     }
@@ -294,7 +294,7 @@ void fliptoscreen(void)
   // If redraw requested, mark whole screen changed
   if (gfx_redraw)
   {
-  	gfx_redraw = 0;
+    gfx_redraw = 0;
     memset(prevscrbuffer, 0xff, MAX_COLUMNS*MAX_ROWS*sizeof(unsigned));
   }
 
@@ -308,7 +308,7 @@ void fliptoscreen(void)
       // Check if char changed
       if (*sptr != *cmpptr)
       {
-      	*cmpptr = *sptr;
+        *cmpptr = *sptr;
         region[y] = 1;
         regionschanged = 1;
 
@@ -353,9 +353,9 @@ void fliptoscreen(void)
   // Redraw mouse if text was redrawn
   if (regionschanged)
   {
-  	int sy = mousepixely >> 4;
-  	int ey = (mousepixely + MOUSESIZEY - 1) >> 4;
-  	if (ey >= MAX_ROWS) ey = MAX_ROWS - 1;
+    int sy = mousepixely >> 4;
+    int ey = (mousepixely + MOUSESIZEY - 1) >> 4;
+    if (ey >= MAX_ROWS) ey = MAX_ROWS - 1;
 
     gfx_drawsprite(mousepixelx, mousepixely, 0x1);
     for (y = sy; y <= ey; y++)
@@ -417,8 +417,8 @@ void getkey(void)
 
   if (rawkey == SDLK_KP_ENTER)
   {
-  	key = KEY_ENTER;
-  	rawkey = SDLK_RETURN;
+    key = KEY_ENTER;
+    rawkey = SDLK_RETURN;
   }
 
   if (rawkey == SDLK_KP0) key = '0';

@@ -1,4 +1,4 @@
-GoatTracker v2.70
+GoatTracker v2.71
 -----------------
 
 Editor by Lasse Öörni (loorni@gmail.com)
@@ -203,6 +203,7 @@ model 8580 and to load "dojo.sng" on startup.
 -Dxx Pattern row display (0 = decimal, 1 = hexadecimal)
 -Exx Set emulated SID model (0 = 6581 1 = 8580) DEFAULT=6581
 -Fxx Set custom SID clock cycles per second (0 = use PAL/NTSC default)
+-Gxx Set pitch of A-4 in Hz (0 = use default frequencytable, close to 440Hz)
 -Hxx Use HardSID (0 = off, 1 = HardSID ID0 2 = HardSID ID1 etc.)
 -Ixx Set reSID interpolation (0 = off, 1 = on, 2 = distortion, 3 = distortion & on) DEFAULT=off
 -Kxx Note-entry mode (0 = PROTRACKER 1 = DMC) DEFAULT=PROTRK.
@@ -216,6 +217,7 @@ model 8580 and to load "dojo.sng" on startup.
 -Uxx Set HardSID playback mode sound buffer length in milliseconds
      DEFAULT=400, max.buffering=0
 -Vxx Set finevibrato conversion (0 = off, 1 = on) DEFAULT=on
+-Xxx Set window type (0 = window, 1 = fullscreen) DEFAULT=window
 -Zxx Set random reSID write delay in cycles (0 = off) DEFAULT=off
 -N   Use NTSC timing
 -P   Use PAL timing (DEFAULT)
@@ -311,7 +313,7 @@ F8        Go to songname editor
 F9        Pack, relocate & save PRG,SID etc.
 F10       Load song (Pattern/Song/Songname mode) or instrument (Instrument mode)
 F11       Save song (Pattern/Song/Songname mode) or instrument (Instrument mode)
-F12       Online help screen
+F12       Online help screen. Press F12 again to toggle context mode
 SHIFT+F1  Play from beginning /w follow play
 SHIFT+F2  Play from current pos. /w follow play
 SHIFT+F3  Play one pattern from current pos. /w follow play
@@ -1827,7 +1829,7 @@ v2.63     - Fixed note independent portamento & vibrato to use the last note
             set in wavetable for calculations, instead of the last note in
             patterndata.
             
-v2.64     - Fixed paste in table (SHIFT+V) working also without SHIFT pressed. 
+v2.64     - Fixed paste in table (SHIFT+V) working also without SHIFT pressed.
 
 v2.65     - Fixed raw keycodes over 511 interpreted as some other keys in the
             0-511 range.
@@ -1852,6 +1854,11 @@ v2.68     - Fixed set tempo -command overwriting frequencytable in 1 or 2
 v2.69     - Fixed click bug in reSID audio output.
           - Newest reSID-fp code integrated.
           - reSID-fp filter parameters adjustable from the configuration file.
-          
+
 v2.70     - Hotfix for the new HardSID UPlay/Uno devices from Téli Sándor.
           - Fixed possible crash on some versions of the HardSID dll.
+
+v2.71     - Added keycode fix patch from Valerio Cannone.
+          - Added fullscreen switch patch from Raine M. Ekman (see /X option)
+          - Added context mode to online help patch from Raine M. Ekman.
+          - Added /G command line option for setting A-4 pitch.

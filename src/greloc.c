@@ -194,8 +194,8 @@ void relocator(void)
         {
           if (songorder[c][d][e] < REPEAT)
           {
-          	int f;
-          	int num = songorder[c][d][e];
+            int f;
+            int num = songorder[c][d][e];
 
             pattused[num] = 1;
             for (f = 0; f < pattlen[num]; f++)
@@ -206,11 +206,11 @@ void relocator(void)
           }
           else
           {
-          	if (songorder[c][d][e] >= TRANSDOWN)
+            if (songorder[c][d][e] >= TRANSDOWN)
             {
-            	notrans = 0;
+              notrans = 0;
               if (songorder[c][d][e] < TRANSUP)
-              	transdownrange = -(songorder[c][d][e] - TRANSUP);
+                transdownrange = -(songorder[c][d][e] - TRANSUP);
               else
                 transuprange = songorder[c][d][e] - TRANSUP;
             }
@@ -278,29 +278,29 @@ void relocator(void)
           exectable(STBL, pattern[c][d*4+3]);
         if (pattern[c][d*4+2] == CMD_FUNKTEMPO)
         {
-        	nofunktempo = 0;
-        	noglobaltempo = 0;
+          nofunktempo = 0;
+          noglobaltempo = 0;
         }
         if ((pattern[c][d*4+2] == CMD_SETTEMPO) && ((pattern[c][d*4+3] & 0x7f) < 3)) nofunktempo = 0;
 
         // See, which are the highest/lowest notes used
         if ((pattern[c][d*4] >= FIRSTNOTE) && (pattern[c][d*4] <= LASTNOTE))
         {
-        	int newfirstnote = pattern[c][d*4] - FIRSTNOTE - transdownrange;
-        	int newlastnote = pattern[c][d*4] - FIRSTNOTE + transuprange;
-        	if (newfirstnote < 0) newfirstnote = 0;
-        	if (newlastnote > MAX_NOTES-1) newlastnote = MAX_NOTES-1;
+          int newfirstnote = pattern[c][d*4] - FIRSTNOTE - transdownrange;
+          int newlastnote = pattern[c][d*4] - FIRSTNOTE + transuprange;
+          if (newfirstnote < 0) newfirstnote = 0;
+          if (newlastnote > MAX_NOTES-1) newlastnote = MAX_NOTES-1;
 
           if (newfirstnote < firstnote) firstnote = newfirstnote;
           if (newlastnote > lastnote)
           {
-          	patternlastnote = newlastnote;
-          	lastnote = newlastnote;
+            patternlastnote = newlastnote;
+            lastnote = newlastnote;
           }
           if (newfirstnote > lastnote)
           {
-          	patternlastnote = newfirstnote;
-          	lastnote = newfirstnote;
+            patternlastnote = newfirstnote;
+            lastnote = newfirstnote;
           }
         }
         if ((tableerror) && (!tableerrortype))
@@ -365,30 +365,30 @@ void relocator(void)
   // Execute tableprograms invoked from wavetable commands
   for (c = 0; c < MAX_TABLELEN; c++)
   {
-  	if (tableused[WTBL][c+1])
-  	{
+    if (tableused[WTBL][c+1])
+    {
       if ((ltable[WTBL][c] >= WAVECMD) && (ltable[WTBL][c] <= WAVELASTCMD))
       {
-  	  	d = -1;
+        d = -1;
         tableerror = 0;
 
         switch(ltable[WTBL][c] - WAVECMD)
         {
-      	  case CMD_PORTAUP:
-      	  case CMD_PORTADOWN:
+          case CMD_PORTAUP:
+          case CMD_PORTADOWN:
           case CMD_TONEPORTA:
           case CMD_VIBRATO:
           d = STBL;
           calcspeedtest(rtable[WTBL][c]);
           break;
 
-      		case CMD_SETPULSEPTR:
-      		d = PTBL;
-      		nopulse = 0;
-  	   		break;
-  	   		
-  	   		case CMD_SETFILTERPTR:
-  	   		d = FTBL;
+          case CMD_SETPULSEPTR:
+          d = PTBL;
+          nopulse = 0;
+           break;
+           
+           case CMD_SETFILTERPTR:
+           d = FTBL;
           nofilter = 0;
           break;
 
@@ -498,17 +498,17 @@ void relocator(void)
   selectdone = 0;
   while (!selectdone)
   {
-  	for (c = 0; c < MAX_OPTIONS; c++)
-  	{
+    for (c = 0; c < MAX_OPTIONS; c++)
+    {
       int color = CNORMAL;
       if (opt == c) color = CEDIT;
 
-  	  printtext(1, 3+c, color, playeroptname[c]);
-  	  if (playerversion & (PLAYER_BUFFERED << c))
-  	    printtext(24, 3+c, color, "Yes");
-  	  else
-  	    printtext(24, 3+c, color, "No ");
-  	}
+      printtext(1, 3+c, color, playeroptname[c]);
+      if (playerversion & (PLAYER_BUFFERED << c))
+        printtext(24, 3+c, color, "Yes");
+      else
+        printtext(24, 3+c, color, "No ");
+    }
     fliptoscreen();
     waitkeynoupdate();
 
@@ -531,11 +531,11 @@ void relocator(void)
       }
       else
       {
-      	if (!(playerversion & PLAYER_BUFFERED))
-      	{
-      	  playerversion &= ~PLAYER_SOUNDEFFECTS;
-      	  playerversion &= ~PLAYER_ZPGHOSTREGS;
-      	}
+        if (!(playerversion & PLAYER_BUFFERED))
+        {
+          playerversion &= ~PLAYER_SOUNDEFFECTS;
+          playerversion &= ~PLAYER_ZPGHOSTREGS;
+        }
       }
       break;
 
@@ -674,8 +674,8 @@ void relocator(void)
     {
       for (d = 0; d < MAX_CHN; d++)
       {
-      	songoffset[c][d] = songdatasize;
-      	songsize[c][d] = 0;
+        songoffset[c][d] = songdatasize;
+        songsize[c][d] = 0;
       }
     }
   }
@@ -762,8 +762,8 @@ void relocator(void)
 
       if (instr[c].ptr[STBL])
       {
-      	novib = 0;
-      	noinsvib = 0;
+        novib = 0;
+        noinsvib = 0;
       }
       if (instr[c].ptr[PTBL])
         nopulse = 0;
@@ -783,9 +783,9 @@ void relocator(void)
   // Disable sameparam optimization for multispeed stability
   if (multiplier > 1)
   {
-  	fixedparams = 0;
-  	numlegato++;
-  	numnohr++;
+    fixedparams = 0;
+    numlegato++;
+    numnohr++;
   }
 
   if (fixedparams) instrsize -= instruments*2;
@@ -798,26 +798,26 @@ void relocator(void)
   {
     if (tableused[WTBL][c+1])
     {
-    	wavetblsize += 2;
-    	if ((ltable[WTBL][c] >= WAVEDELAY) && (ltable[WTBL][c] <= WAVELASTDELAY)) nowavedelay = 0;
-    	if ((ltable[WTBL][c] >= WAVECMD) && (ltable[WTBL][c] <= WAVELASTCMD))
+      wavetblsize += 2;
+      if ((ltable[WTBL][c] >= WAVEDELAY) && (ltable[WTBL][c] <= WAVELASTDELAY)) nowavedelay = 0;
+      if ((ltable[WTBL][c] >= WAVECMD) && (ltable[WTBL][c] <= WAVELASTCMD))
       {
-      	nowavecmd = 0;
-      	noeffects = 0;
-      	switch (ltable[WTBL][c] - WAVECMD)
-      	{
-      		case CMD_PORTAUP:
-      		case CMD_PORTADOWN:
-      		noportamento = 0;
-      		break;
+        nowavecmd = 0;
+        noeffects = 0;
+        switch (ltable[WTBL][c] - WAVECMD)
+        {
+          case CMD_PORTAUP:
+          case CMD_PORTADOWN:
+          noportamento = 0;
+          break;
 
-      		case CMD_TONEPORTA:
-      		notoneporta = 0;
-      		break;
+          case CMD_TONEPORTA:
+          notoneporta = 0;
+          break;
 
-      		case CMD_VIBRATO:
-      		novib = 0;
-      		break;
+          case CMD_VIBRATO:
+          novib = 0;
+          break;
 
           case CMD_SETAD:
           nosetad = 0;
@@ -854,20 +854,20 @@ void relocator(void)
       }
       if (ltable[WTBL][c] < WAVECMD)
       {
-      	if (rtable[WTBL][c] <= 0x80)
+        if (rtable[WTBL][c] <= 0x80)
         {
           int newlastnote = rtable[WTBL][c] + patternlastnote;
           if (newlastnote > MAX_NOTES - 1) newlastnote = MAX_NOTES - 1;
           if (rtable[WTBL][c] >= 0x20) firstnote = 0;
-         	if (newlastnote > lastnote) lastnote = newlastnote;
+           if (newlastnote > lastnote) lastnote = newlastnote;
         }
         else
         {
-        	int newfirstnote = rtable[WTBL][c] & 0x7f;
-        	int newlastnote = rtable[WTBL][c] & 0x7f;
+          int newfirstnote = rtable[WTBL][c] & 0x7f;
+          int newlastnote = rtable[WTBL][c] & 0x7f;
           if (newlastnote > MAX_NOTES - 1) newlastnote = MAX_NOTES - 1;
-        	if (newfirstnote < firstnote) firstnote = newfirstnote;
-        	if (newlastnote > lastnote) lastnote = newlastnote;
+          if (newfirstnote < firstnote) firstnote = newfirstnote;
+          if (newlastnote > lastnote) lastnote = newlastnote;
         }
       }
     }
@@ -876,15 +876,15 @@ void relocator(void)
   {
     if (tableused[PTBL][c+1])
     {
-    	pulsetblsize += 2;
-    	if ((ltable[PTBL][c] >= 0x80) && (ltable[PTBL][c] != 0xff))
+      pulsetblsize += 2;
+      if ((ltable[PTBL][c] >= 0x80) && (ltable[PTBL][c] != 0xff))
       {
-      	if (rtable[PTBL][c] & 0xf) simplepulse = 0;
+        if (rtable[PTBL][c] & 0xf) simplepulse = 0;
       }
-    	if (ltable[PTBL][c] < 0x80)
+      if (ltable[PTBL][c] < 0x80)
       {
-      	nopulsemod = 0;
-      	if (rtable[PTBL][c] & 0xf) simplepulse = 0;
+        nopulsemod = 0;
+        if (rtable[PTBL][c] & 0xf) simplepulse = 0;
       }
     }
   }
@@ -892,8 +892,8 @@ void relocator(void)
   {
     if (tableused[FTBL][c+1])
     {
-    	filttblsize += 2;
-    	if (ltable[FTBL][c] < 0x80) nofiltermod = 0;
+      filttblsize += 2;
+      if (ltable[FTBL][c] < 0x80) nofiltermod = 0;
     }
   }
   for (c = 0; c < MAX_TABLELEN; c++)
@@ -1043,7 +1043,7 @@ void relocator(void)
   // For sound effect support, always use the full table
   if (playerversion & PLAYER_SOUNDEFFECTS)
   {
-  	firstnote = 0;
+    firstnote = 0;
     lastnote = MAX_NOTES-1;
   }
 
@@ -1112,8 +1112,8 @@ void relocator(void)
   // Fixed firstwave & gatetimer
   if (fixedparams)
   {
-  	insertdefine("FIRSTWAVEPARAM", instr[1].firstwave);
-  	insertdefine("GATETIMERPARAM", instr[1].gatetimer & 0x3f);
+    insertdefine("FIRSTWAVEPARAM", instr[1].firstwave);
+    insertdefine("GATETIMERPARAM", instr[1].gatetimer & 0x3f);
   }
 
   // Insert source code of player
@@ -1139,28 +1139,28 @@ void relocator(void)
   insertlabel("mt_songtbllo");
   for (c = 0; c < songs*3; c++)
   {
-  	sprintf(textbuffer, "mt_song%d", c);
-  	insertaddrlo(textbuffer);
+    sprintf(textbuffer, "mt_song%d", c);
+    insertaddrlo(textbuffer);
   }
   insertlabel("mt_songtblhi");
   for (c = 0; c < songs*3; c++)
   {
-  	sprintf(textbuffer, "mt_song%d", c);
-  	insertaddrhi(textbuffer);
+    sprintf(textbuffer, "mt_song%d", c);
+    insertaddrhi(textbuffer);
   }
 
   // Insert patterntable
   insertlabel("mt_patttbllo");
   for (c = 0; c < patterns; c++)
   {
-  	sprintf(textbuffer, "mt_patt%d", c);
-  	insertaddrlo(textbuffer);
+    sprintf(textbuffer, "mt_patt%d", c);
+    insertaddrlo(textbuffer);
   }
   insertlabel("mt_patttblhi");
   for (c = 0; c < patterns; c++)
   {
-  	sprintf(textbuffer, "mt_patt%d", c);
-  	insertaddrhi(textbuffer);
+    sprintf(textbuffer, "mt_patt%d", c);
+    insertaddrhi(textbuffer);
   }
 
   // Insert instruments
@@ -1172,42 +1172,42 @@ void relocator(void)
   insertbytes(&instrwork[instruments*2], instruments);
   if (!nopulse)
   {
-  	insertlabel("mt_inspulseptr");
+    insertlabel("mt_inspulseptr");
     insertbytes(&instrwork[instruments*3], instruments);
   }
   if (!nofilter)
   {
-  	insertlabel("mt_insfiltptr");
+    insertlabel("mt_insfiltptr");
     insertbytes(&instrwork[instruments*4], instruments);
   }
   if (!noinsvib)
   {
-  	insertlabel("mt_insvibparam");
+    insertlabel("mt_insvibparam");
     insertbytes(&instrwork[instruments*5], instruments);
-  	insertlabel("mt_insvibdelay");
+    insertlabel("mt_insvibdelay");
     insertbytes(&instrwork[instruments*6], instruments);
   }
   if (!fixedparams)
   {
-  	insertlabel("mt_insgatetimer");
+    insertlabel("mt_insgatetimer");
     insertbytes(&instrwork[instruments*7], instruments);
-  	insertlabel("mt_insfirstwave");
+    insertlabel("mt_insfirstwave");
     insertbytes(&instrwork[instruments*8], instruments);
   }
 
   // Insert tables
   for (c = 0; c < MAX_TABLES; c++)
   {
-  	if ((c == PTBL) && (nopulse)) goto SKIPTABLE;
-  	if ((c == FTBL) && (nofilter)) goto SKIPTABLE;
+    if ((c == PTBL) && (nopulse)) goto SKIPTABLE;
+    if ((c == FTBL) && (nofilter)) goto SKIPTABLE;
 
     // Write table left side
     // Extra zero for speedtable
     if ((c == STBL) && ((!novib) || (!nofunktempo) || (!noportamento) || (!notoneporta))) insertbyte(0);
     // Table label
-  	insertlabel(tableleftname[c]);
+    insertlabel(tableleftname[c]);
 
-  	// Table data
+    // Table data
     for (d = 0; d < MAX_TABLELEN; d++)
     {
       if (tableused[c][d+1])
@@ -1226,7 +1226,7 @@ void relocator(void)
 
           case PTBL:
           if ((simplepulse) && (ltable[c][d] != 0xff) && (ltable[c][d] > 0x80))
-          	insertbyte(0x80);
+            insertbyte(0x80);
           else
             insertbyte(ltable[c][d]);
           break;
@@ -1250,7 +1250,7 @@ void relocator(void)
     // Extra zero for speedtable
     if ((c == STBL) && ((!novib) || (!nofunktempo) || (!noportamento) || (!notoneporta))) insertbyte(0);
     // Table label
-  	insertlabel(tablerightname[c]);
+    insertlabel(tablerightname[c]);
 
     for (d = 0; d < MAX_TABLELEN; d++)
     {
@@ -1260,30 +1260,30 @@ void relocator(void)
         {
           switch(c)
           {
-          	case WTBL:
+            case WTBL:
             if ((ltable[c][d] >= WAVECMD) && (ltable[c][d] <= WAVELASTCMD))
             {
               // Remap table-referencing commands
               switch (ltable[c][d] - WAVECMD)
               {
-              	case CMD_PORTAUP:
-              	case CMD_PORTADOWN:
-              	case CMD_TONEPORTA:
-              	case CMD_VIBRATO:
+                case CMD_PORTAUP:
+                case CMD_PORTADOWN:
+                case CMD_TONEPORTA:
+                case CMD_VIBRATO:
                 insertbyte(tablemap[STBL][rtable[c][d]]);
-              	break;
+                break;
 
-              	case CMD_SETPULSEPTR:
-              	insertbyte(tablemap[PTBL][rtable[c][d]]);
-              	break;
+                case CMD_SETPULSEPTR:
+                insertbyte(tablemap[PTBL][rtable[c][d]]);
+                break;
 
-              	case CMD_SETFILTERPTR:
-              	insertbyte(tablemap[FTBL][rtable[c][d]]);
-              	break;
+                case CMD_SETFILTERPTR:
+                insertbyte(tablemap[FTBL][rtable[c][d]]);
+                break;
 
-              	default:
-              	insertbyte(rtable[c][d]);
-              	break;
+                default:
+                insertbyte(rtable[c][d]);
+                break;
               }
             }
             else
@@ -1296,14 +1296,14 @@ void relocator(void)
             case PTBL:
             if (simplepulse)
             {
-            	if (ltable[c][d] >= 0x80)
+              if (ltable[c][d] >= 0x80)
                 insertbyte((ltable[c][d] & 0x0f) | (rtable[c][d] & 0xf0));
               else
               {
                 int pulsespeed = rtable[c][d] >> 4;
                 if (rtable[c][d] & 0x80)
                 {
-                	pulsespeed |= 0xf0;
+                  pulsespeed |= 0xf0;
                   pulsespeed--;
                 }
                 pulsespeed = swapnybbles(pulsespeed);
@@ -1330,9 +1330,9 @@ void relocator(void)
   // Insert orderlists
   for (c = 0; c < songs; c++)
   {
-  	for (d = 0; d < MAX_CHN; d++)
-  	{
-  		sprintf(textbuffer, "mt_song%d", c*3+d);
+    for (d = 0; d < MAX_CHN; d++)
+    {
+      sprintf(textbuffer, "mt_song%d", c*3+d);
       insertlabel(textbuffer);
       insertbytes(&songwork[songoffset[c][d]], songsize[c][d]);
     }
@@ -1347,7 +1347,7 @@ void relocator(void)
   }
 
   /* {
-  	FILE *handle = fopen("debug.s", "wb");
+    FILE *handle = fopen("debug.s", "wb");
     fwrite(membuf_get(&src), membuf_memlen(&src), 1, handle);
     fclose(handle);
   } */
@@ -1765,8 +1765,8 @@ int packpattern(unsigned char *dest, unsigned char *src, int rows)
 
   if (noeffects)
   {
-  	command = 0;
-  	databyte = 0;
+    command = 0;
+    databyte = 0;
   }
 
   // Write in playroutine format
@@ -1909,7 +1909,7 @@ int insertfile(char *name)
   io_lseek(handle, 0, SEEK_SET);
   while (size--)
   {
-  	membuf_append_char(&src, io_read8(handle));
+    membuf_append_char(&src, io_read8(handle));
   }
   io_close(handle);
   return 1;
@@ -1943,8 +1943,8 @@ void insertbytes(const unsigned char *bytes, int size)
 
   while (size--)
   {
-  	if (!row)
-  	{
+    if (!row)
+    {
       inserttext("                .BYTE (");
       sprintf(insertbuffer, "$%02x", *bytes);
       inserttext(insertbuffer);
@@ -1953,15 +1953,15 @@ void insertbytes(const unsigned char *bytes, int size)
     }
     else
     {
-    	sprintf(insertbuffer, ",$%02x", *bytes);
+      sprintf(insertbuffer, ",$%02x", *bytes);
       inserttext(insertbuffer);
-    	bytes++;
-    	row++;
-    	if (row == MAX_BYTES_PER_ROW)
-    	{
-    		inserttext(")\n");
-    		row = 0;
-    	}
+      bytes++;
+      row++;
+      if (row == MAX_BYTES_PER_ROW)
+      {
+        inserttext(")\n");
+        row = 0;
+      }
     }
   }
   if (row) inserttext(")\n");
@@ -1999,59 +1999,59 @@ void findtableduplicates(int num)
   {
     for (c = 1; c <= MAX_TABLELEN; c++)
     {
-    	if (tableused[num][c])
-    	{
-    		for (d = c+1; d <= MAX_TABLELEN; d++)
-    		{
-    			if (tableused[num][d])
-    			{
-    				if ((ltable[num][d-1] == ltable[num][c-1]) && (rtable[num][d-1] == rtable[num][c-1]))
-    				{
-    					// Duplicate found, remove and map to the original
-    					tableused[num][d] = 0;
-    					for (e = d; e <= MAX_TABLELEN; e++)
-    						if (tableused[num][e]) tablemap[num][e]--;
-    					tablemap[num][d] = tablemap[num][c];
-    				}
-    			}
-    		}
-    	}
+      if (tableused[num][c])
+      {
+        for (d = c+1; d <= MAX_TABLELEN; d++)
+        {
+          if (tableused[num][d])
+          {
+            if ((ltable[num][d-1] == ltable[num][c-1]) && (rtable[num][d-1] == rtable[num][c-1]))
+            {
+              // Duplicate found, remove and map to the original
+              tableused[num][d] = 0;
+              for (e = d; e <= MAX_TABLELEN; e++)
+                if (tableused[num][e]) tablemap[num][e]--;
+              tablemap[num][d] = tablemap[num][c];
+            }
+          }
+        }
+      }
     }
   }
   else
   {
-  	for (c = 1; c <= MAX_TABLELEN; c++)
-  	{
-  		if (isusedandselfcontained(num, c))
-  		{
-  			for (d = c + gettablepartlen(num, c - 1); d <= MAX_TABLELEN; )
+    for (c = 1; c <= MAX_TABLELEN; c++)
+    {
+      if (isusedandselfcontained(num, c))
+      {
+        for (d = c + gettablepartlen(num, c - 1); d <= MAX_TABLELEN; )
         {
           int len = gettablepartlen(num, d - 1);
 
           if (isusedandselfcontained(num, d))
           {
-          	for (e = 0; e < len; e++)
-          	{
-          		if (e < len-1)
-          		{
-          			// Is table data the same?
+            for (e = 0; e < len; e++)
+            {
+              if (e < len-1)
+              {
+                // Is table data the same?
                 if ((ltable[num][d+e-1] != ltable[num][c+e-1]) || (rtable[num][d+e-1] != rtable[num][c+e-1]))
                   break;
               }
               else
               {
-              	// Do both parts have a jump in the end?
-              	if (ltable[num][d+e-1] != ltable[num][c+e-1])
-              	  break;
-              	// Do both parts end?
-              	if (rtable[num][d+e-1] == 0)
-              	{
-              	  if (rtable[num][c+e-1] != 0)
-              	    break;
-              	}
-              	else
+                // Do both parts have a jump in the end?
+                if (ltable[num][d+e-1] != ltable[num][c+e-1])
+                  break;
+                // Do both parts end?
+                if (rtable[num][d+e-1] == 0)
                 {
-                	// Do both parts loop in the same way?
+                  if (rtable[num][c+e-1] != 0)
+                    break;
+                }
+                else
+                {
+                  // Do both parts loop in the same way?
                   if ((rtable[num][d+e-1] - d) != (rtable[num][c+e-1] - c))
                     break;
                 }
@@ -2059,13 +2059,13 @@ void findtableduplicates(int num)
             }
             if (e == len)
             {
-            	// Duplicate found, remove and map to the original
-            	for (e = 0; e < len; e++)
-            		tableused[num][d+e] = 0;
-            	for (e = d; e < MAX_TABLELEN; e++)
-            		if (tableused[num][e]) tablemap[num][e] -= len;
-            	for (e = 0; e < len; e++)
-            		tablemap[num][d+e] = tablemap[num][c+e];
+              // Duplicate found, remove and map to the original
+              for (e = 0; e < len; e++)
+                tableused[num][d+e] = 0;
+              for (e = d; e < MAX_TABLELEN; e++)
+                if (tableused[num][e]) tablemap[num][e] -= len;
+              for (e = 0; e < len; e++)
+                tablemap[num][d+e] = tablemap[num][c+e];
             }
           }
           d += len;
@@ -2087,12 +2087,12 @@ int isusedandselfcontained(int num, int start)
   // Check that whole table is used
   for (c = start; c <= end; c++)
   {
-  	if (tableused[num][c] == 0) return 0;
+    if (tableused[num][c] == 0) return 0;
   }
   // Check for jump to outside
   if (rtable[num][end-1] != 0)
   {
-  	if ((rtable[num][end-1] < start) || (rtable[num][end-1] > end)) return 0;
+    if ((rtable[num][end-1] < start) || (rtable[num][end-1] > end)) return 0;
   }
   // Check for jump from outside
   for (c = 1; c < start; c++)

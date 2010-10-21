@@ -58,8 +58,8 @@ void initchannels(void)
 
   for (c = 0; c < MAX_CHN; c++)
   {
-  	chn[c].trans = 0;
-  	chn[c].instr = 1;
+    chn[c].trans = 0;
+    chn[c].instr = 1;
     if (multiplier)
       cptr->tempo = 6*multiplier-1;
     else
@@ -518,21 +518,21 @@ void playroutine(void)
 
         if (wave > WAVELASTDELAY)
         {
-        	// Normal waveform values
-        	if (wave < WAVESILENT) cptr->wave = wave;
+          // Normal waveform values
+          if (wave < WAVESILENT) cptr->wave = wave;
           // Values without waveform selected
           if ((wave >= WAVESILENT) && (wave <= WAVELASTSILENT)) cptr->wave = wave & 0xf;
           // Command execution from wavetable
           if ((wave >= WAVECMD) && (wave <= WAVELASTCMD))
           {
-          	unsigned char param = rtable[WTBL][cptr->ptr[WTBL]-1];
-          	switch (wave & 0xf)
-          	{
-          		case CMD_DONOTHING:
-          		case CMD_SETWAVEPTR:
-          		case CMD_FUNKTEMPO:
-          		stopsong();
-          		break;
+            unsigned char param = rtable[WTBL][cptr->ptr[WTBL]-1];
+            switch (wave & 0xf)
+            {
+              case CMD_DONOTHING:
+              case CMD_SETWAVEPTR:
+              case CMD_FUNKTEMPO:
+              stopsong();
+              break;
 
               case CMD_PORTAUP:
               {
@@ -850,7 +850,7 @@ void playroutine(void)
         // Skip pulse when sequencer has been executed
         if (optimizepulse)
         {
-        	if ((!cptr->tick) && (!cptr->pattptr)) goto NEXTCHN;
+          if ((!cptr->tick) && (!cptr->pattptr)) goto NEXTCHN;
         }
 
         // Pulsetable jump

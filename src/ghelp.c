@@ -286,38 +286,38 @@ void onlinehelp(int standalone,int context)
     } else {
       switch(editmode) {
       case EDIT_PATTERN:      
-	printtext(0,left++, HELP_HEADER, "PATTERN EDIT MODE");
-	left = printrows(0,left,HELP_NORMAL, patternkeys);
-	left++;
-	printtext(0, left++, HELP_HEADER, "PATTERN COMMANDS");
-	left = printrows(0,left,HELP_NORMAL, pattcmds);
-	left++;
-	break;
+        printtext(0,left++, HELP_HEADER, "PATTERN EDIT MODE");
+        left = printrows(0,left,HELP_NORMAL, patternkeys);
+        left++;
+        printtext(0, left++, HELP_HEADER, "PATTERN COMMANDS");
+        left = printrows(0,left,HELP_NORMAL, pattcmds);
+        left++;
+        break;
       case EDIT_ORDERLIST:
-	printtext(0, left++, HELP_HEADER, "SONG EDIT MODE");
-	left = printrows(0,left,HELP_NORMAL, songkeys);
-	left++;
-	break;
+        printtext(0, left++, HELP_HEADER, "SONG EDIT MODE");
+        left = printrows(0,left,HELP_NORMAL, songkeys);
+        left++;
+        break;
       case EDIT_INSTRUMENT:
-	printtext(0,left++, HELP_HEADER, "INSTRUMENT/TABLE EDIT MODE");
-	left = printrows(0,left,HELP_NORMAL, instkeys);
-	left++;
-	printtext(0, left++, HELP_HEADER, "INSTRUMENT PARAMETERS");
-	left = printrows(0,left,HELP_NORMAL, instparm);
-	left++;
-	break;
+        printtext(0,left++, HELP_HEADER, "INSTRUMENT/TABLE EDIT MODE");
+        left = printrows(0,left,HELP_NORMAL, instkeys);
+        left++;
+        printtext(0, left++, HELP_HEADER, "INSTRUMENT PARAMETERS");
+        left = printrows(0,left,HELP_NORMAL, instparm);
+        left++;
+        break;
       case EDIT_NAMES:
-	printtext(0, left++, HELP_HEADER, "SONGNAME EDIT MODE");
-	printtext(0, left++, HELP_NORMAL, "Use cursor UP/DOWN to change rows");
-	left++;
-	break;
+        printtext(0, left++, HELP_HEADER, "SONGNAME EDIT MODE");
+        printtext(0, left++, HELP_NORMAL, "Use cursor UP/DOWN to change rows");
+        left++;
+        break;
       case EDIT_TABLES:
-	printtext(0,left++, HELP_HEADER, "INSTRUMENT/TABLE EDIT MODE");
-	left = printrows(0,left++,HELP_NORMAL, instkeys);
-	left++;
-	break;
+        printtext(0,left++, HELP_HEADER, "INSTRUMENT/TABLE EDIT MODE");
+        left = printrows(0,left++,HELP_NORMAL, instkeys);
+        left++;
+        break;
       default:
-	break;
+        break;
       }
 
     }
@@ -348,21 +348,21 @@ void onlinehelp(int standalone,int context)
     {
       case KEY_LEFT:
       case KEY_UP:
-	hview++;
-	break;
+        hview++;
+        break;
 
       case KEY_RIGHT:
       case KEY_DOWN:
-	hview--;
-	break;
+        hview--;
+        break;
 
       case KEY_PGUP:
         hview+=PGUPDNREPEAT;
-	break;
+        break;
 
       case KEY_PGDN:
         hview-=PGUPDNREPEAT;
-	break;
+        break;
 
       case KEY_HOME:
       hview = -1;
@@ -373,11 +373,11 @@ void onlinehelp(int standalone,int context)
       break;
 
       case KEY_F12:
-	context = !context;
-	hview = -1;
-	lastrow = 0;
-	continue;
-	break;
+        context = !context;
+        hview = -1;
+        lastrow = 0;
+        continue;
+        break;
 
     case KEY_ESC:
       goto EXITHELP;

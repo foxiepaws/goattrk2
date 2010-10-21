@@ -76,7 +76,7 @@ int sound_init(unsigned b, unsigned mr, unsigned writer, unsigned hardsid, unsig
 
   #ifdef __WIN32__
   if (!flushmutex)
-  	flushmutex = SDL_CreateMutex();
+      flushmutex = SDL_CreateMutex();
   #endif
 
   sound_uninit();
@@ -115,28 +115,28 @@ int sound_init(unsigned b, unsigned mr, unsigned writer, unsigned hardsid, unsig
     if (dll_initialized)
     {
       usehardsid = hardsid;
-	  if (cycleexacthardsid) {
-	    HardSID_Lock(usehardsid-1);
+      if (cycleexacthardsid) {
+        HardSID_Lock(usehardsid-1);
         HardSID_Flush(usehardsid-1);
-		HardSID_Write(usehardsid-1, SIDWRITEDELAY, 0, 0x00);
-		Sleep(300);
-	  }
+        HardSID_Write(usehardsid-1, SIDWRITEDELAY, 0, 0x00);
+        Sleep(300);
+      }
       for (c = 0; c < NUMSIDREGS; c++)
       {
         sidreg[c] = 0;
-		if (cycleexacthardsid) {
-			HardSID_Write(usehardsid-1, SIDWRITEDELAY, c, 0x00);
-		}
-		else {
-			WriteToHardSID(usehardsid-1, c, 0x00);
-		}
+        if (cycleexacthardsid) {
+            HardSID_Write(usehardsid-1, SIDWRITEDELAY, c, 0x00);
+        }
+        else {
+            WriteToHardSID(usehardsid-1, c, 0x00);
+        }
       }
       if (cycleexacthardsid) {
         HardSID_SoftFlush(usehardsid-1);
-	  }
-	  else {
+      }
+      else {
         MuteHardSID_Line(FALSE);
-	  }
+      }
     }
     else return 0;
     if (!cycleexacthardsid)
@@ -253,7 +253,7 @@ void sound_uninit(void)
   }
   else
   {
-  	snd_setcustommixer(NULL);
+      snd_setcustommixer(NULL);
     snd_player = NULL;
   }
 
@@ -274,12 +274,12 @@ void sound_uninit(void)
     #ifdef __WIN32__
     for (c = 0; c < NUMSIDREGS; c++)
     {
-		if (cycleexacthardsid) {
-			HardSID_Write(usehardsid-1, SIDWRITEDELAY, c, 0x00);
-		}
-		else {
-			WriteToHardSID(usehardsid-1, c, 0x00);
-		}
+        if (cycleexacthardsid) {
+            HardSID_Write(usehardsid-1, SIDWRITEDELAY, c, 0x00);
+        }
+        else {
+            WriteToHardSID(usehardsid-1, c, 0x00);
+        }
     }
     MuteHardSID_Line(TRUE);
     #else
@@ -390,17 +390,17 @@ int sound_thread(void *userdata)
     {
       unsigned o = sid_getorder(c);
 
-  	  // Extra delay before loading the waveform (and mt_chngate,x)
-  	  if ((o == 4) || (o == 11) || (o == 18))
-  	  {
+        // Extra delay before loading the waveform (and mt_chngate,x)
+        if ((o == 4) || (o == 11) || (o == 18))
+        {
         HardSID_Write(usehardsid-1, SIDWRITEDELAY+SIDWAVEDELAY, o, sidreg[o]);
-  	    cycles -= SIDWRITEDELAY+SIDWAVEDELAY;
+          cycles -= SIDWRITEDELAY+SIDWAVEDELAY;
       }
-	    else
+        else
       {
-		    HardSID_Write(usehardsid-1, SIDWRITEDELAY, o, sidreg[o]);
-		    cycles -= SIDWRITEDELAY;
-	    }
+            HardSID_Write(usehardsid-1, SIDWRITEDELAY, o, sidreg[o]);
+            cycles -= SIDWRITEDELAY;
+        }
     }
 
     // Now wait the rest of frame
@@ -412,12 +412,12 @@ int sound_thread(void *userdata)
       cycles -= runnow;
     }
 
-  	if ((flush_cycles_interactive>0 && interactive && cycles_after_flush>=flush_cycles_interactive) ||
-		  (flush_cycles_playback>0 && !interactive && cycles_after_flush>=flush_cycles_playback))
+      if ((flush_cycles_interactive>0 && interactive && cycles_after_flush>=flush_cycles_interactive) ||
+          (flush_cycles_playback>0 && !interactive && cycles_after_flush>=flush_cycles_playback))
     {
       if (HardSID_SoftFlush)
         HardSID_SoftFlush(usehardsid-1);
-		  cycles_after_flush = 0;
+          cycles_after_flush = 0;
     }
   }
 
@@ -445,12 +445,12 @@ void sound_playrout(void)
     for (c = 0; c < NUMSIDREGS; c++)
     {
       unsigned o = sid_getorder(c);
-		if (cycleexacthardsid) {
-			HardSID_Write(usehardsid-1, SIDWRITEDELAY, o, sidreg[o]);
-		}
-		else {
-			WriteToHardSID(usehardsid-1, o, sidreg[o]);
-		}
+        if (cycleexacthardsid) {
+            HardSID_Write(usehardsid-1, SIDWRITEDELAY, o, sidreg[o]);
+        }
+        else {
+            WriteToHardSID(usehardsid-1, o, sidreg[o]);
+        }
     }
     #else
     for (c = 0; c < NUMSIDREGS; c++)

@@ -8,6 +8,7 @@
 #include <ctype.h>
 #include <dirent.h>
 #include <sys/stat.h>
+#include <math.h>
 #include "bme.h"
 
 #include "gcommon.h"
@@ -77,6 +78,7 @@ extern unsigned catweasel;
 extern unsigned interpolate;
 extern unsigned hardsidbufinteractive;
 extern unsigned hardsidbufplayback;
+extern float basepitch;
 extern char configbuf[MAX_PATHNAME];
 extern char loadedsongfilename[MAX_FILENAME];
 extern char songfilename[MAX_FILENAME];
@@ -110,5 +112,6 @@ void clear(void);
 void prevmultiplier(void);
 void nextmultiplier(void);
 void editadsr(void);
+void calculatefreqtable(void);
 
 #endif

@@ -250,13 +250,13 @@ void showinstrtable(void)
 {
   if (!etlock)
   {
-  	int c;
+    int c;
 
-  	for (c = MAX_TABLES-1; c >= 0; c--)
-  	{
-  		if (instr[einum].ptr[c])
-  	    settableviewfirst(c, instr[einum].ptr[c] - 1);
-  	}
+    for (c = MAX_TABLES-1; c >= 0; c--)
+    {
+      if (instr[einum].ptr[c])
+        settableviewfirst(c, instr[einum].ptr[c] - 1);
+    }
   }
 }
 

@@ -25,68 +25,68 @@ void tablecommands(void)
 
   switch(rawkey)
   {
-  	case KEY_Q:
-  	if ((shiftpressed) && (etnum == STBL))
-  	{
-  		int speed = (ltable[etnum][etpos] << 8) | rtable[etnum][etpos];
-  		speed *= 34716;
-  		speed /= 32768;
-  		if (speed > 65535) speed = 65535;
+    case KEY_Q:
+    if ((shiftpressed) && (etnum == STBL))
+    {
+      int speed = (ltable[etnum][etpos] << 8) | rtable[etnum][etpos];
+      speed *= 34716;
+      speed /= 32768;
+      if (speed > 65535) speed = 65535;
 
-  		ltable[etnum][etpos] = speed >> 8;
-  		rtable[etnum][etpos] = speed & 0xff;
-  	}
+      ltable[etnum][etpos] = speed >> 8;
+      rtable[etnum][etpos] = speed & 0xff;
+    }
     break;
 
-  	case KEY_A:
-  	if ((shiftpressed) && (etnum == STBL))
-  	{
-  		int speed = (ltable[etnum][etpos] << 8) | rtable[etnum][etpos];
-  		speed *= 30929;
-  		speed /= 32768;
+    case KEY_A:
+    if ((shiftpressed) && (etnum == STBL))
+    {
+      int speed = (ltable[etnum][etpos] << 8) | rtable[etnum][etpos];
+      speed *= 30929;
+      speed /= 32768;
 
-  		ltable[etnum][etpos] = speed >> 8;
-  		rtable[etnum][etpos] = speed & 0xff;
-  	}
+      ltable[etnum][etpos] = speed >> 8;
+      rtable[etnum][etpos] = speed & 0xff;
+    }
     break;
     
-  	case KEY_W:
-  	if ((shiftpressed) && (etnum == STBL))
-  	{
-  		int speed = (ltable[etnum][etpos] << 8) | rtable[etnum][etpos];
-  		speed *= 2;
-  		if (speed > 65535) speed = 65535;
+    case KEY_W:
+    if ((shiftpressed) && (etnum == STBL))
+    {
+      int speed = (ltable[etnum][etpos] << 8) | rtable[etnum][etpos];
+      speed *= 2;
+      if (speed > 65535) speed = 65535;
 
-  		ltable[etnum][etpos] = speed >> 8;
-  		rtable[etnum][etpos] = speed & 0xff;
-  	}
-  	if ((shiftpressed) && ((etnum == PTBL) || (etnum == FTBL)) && (ltable[etnum][etpos] < 0x80))
-  	{
-  		int speed = (signed char)(rtable[etnum][etpos]);
-  		speed *= 2;
+      ltable[etnum][etpos] = speed >> 8;
+      rtable[etnum][etpos] = speed & 0xff;
+    }
+    if ((shiftpressed) && ((etnum == PTBL) || (etnum == FTBL)) && (ltable[etnum][etpos] < 0x80))
+    {
+      int speed = (signed char)(rtable[etnum][etpos]);
+      speed *= 2;
 
       if (speed > 127) speed = 127;
       if (speed < -128) speed = -128;
-  		rtable[etnum][etpos] = speed;
-  	}
+      rtable[etnum][etpos] = speed;
+    }
     break;
     
-  	case KEY_S:
-  	if ((shiftpressed) && (etnum == STBL))
-  	{
-  		int speed = (ltable[etnum][etpos] << 8) | rtable[etnum][etpos];
-  		speed /= 2;
+    case KEY_S:
+    if ((shiftpressed) && (etnum == STBL))
+    {
+      int speed = (ltable[etnum][etpos] << 8) | rtable[etnum][etpos];
+      speed /= 2;
 
-  		ltable[etnum][etpos] = speed >> 8;
-  		rtable[etnum][etpos] = speed & 0xff;
-  	}
-  	if ((shiftpressed) && ((etnum == PTBL) || (etnum == FTBL)) && (ltable[etnum][etpos] < 0x80))
-  	{
-  		int speed = (signed char)(rtable[etnum][etpos]);
-  		speed /= 2;
+      ltable[etnum][etpos] = speed >> 8;
+      rtable[etnum][etpos] = speed & 0xff;
+    }
+    if ((shiftpressed) && ((etnum == PTBL) || (etnum == FTBL)) && (ltable[etnum][etpos] < 0x80))
+    {
+      int speed = (signed char)(rtable[etnum][etpos]);
+      speed /= 2;
 
-  		rtable[etnum][etpos] = speed;
-  	}
+      rtable[etnum][etpos] = speed;
+    }
     break;
 
     case KEY_SPACE:
@@ -290,8 +290,8 @@ void tablecommands(void)
 
       while (time)
       {
-      	if (abs(speed) < 128)
-      	{
+        if (abs(speed) < 128)
+        {
           if (time < 127) ltable[etnum][etpos] = time;
             else ltable[etnum][etpos] = 127;
           rtable[etnum][etpos] = speed;
@@ -301,7 +301,7 @@ void tablecommands(void)
         else
         {
           currentpulse += speed;
-        	ltable[etnum][etpos] = 0x80 | ((currentpulse >> 8) & 0xf);
+          ltable[etnum][etpos] = 0x80 | ((currentpulse >> 8) & 0xf);
           rtable[etnum][etpos] = currentpulse & 0xff;
           time--;
           etpos++;
@@ -394,38 +394,38 @@ void tablecommands(void)
     case KEY_ENTER:
     if (etnum == WTBL)
     {
-    	int table = -1;
-    	int mstmode = MST_PORTAMENTO;
+      int table = -1;
+      int mstmode = MST_PORTAMENTO;
 
-    	switch (ltable[etnum][etpos])
-    	{
-    		case WAVECMD + CMD_PORTAUP:
-    		case WAVECMD + CMD_PORTADOWN:
-    		case WAVECMD + CMD_TONEPORTA:
-    		table = STBL;
-    		break;
+      switch (ltable[etnum][etpos])
+      {
+        case WAVECMD + CMD_PORTAUP:
+        case WAVECMD + CMD_PORTADOWN:
+        case WAVECMD + CMD_TONEPORTA:
+        table = STBL;
+        break;
 
-    		case WAVECMD + CMD_VIBRATO:
-    		table = STBL;
-    		mstmode = finevibrato;
-    		break;
+        case WAVECMD + CMD_VIBRATO:
+        table = STBL;
+        mstmode = finevibrato;
+        break;
 
-    		case WAVECMD + CMD_FUNKTEMPO:
+        case WAVECMD + CMD_FUNKTEMPO:
         table = STBL;
         mstmode = MST_FUNKTEMPO;
-    		break;
+        break;
 
-    		case WAVECMD + CMD_SETPULSEPTR:
-    		table = PTBL;
-    		break;
+        case WAVECMD + CMD_SETPULSEPTR:
+        table = PTBL;
+        break;
 
-    		case WAVECMD + CMD_SETFILTERPTR:
-    		table = FTBL;
-    		break;
-    	}
+        case WAVECMD + CMD_SETFILTERPTR:
+        table = FTBL;
+        break;
+      }
       switch (table)
       {
-      	default:
+        default:
         editmode = EDIT_INSTRUMENT;
         eipos = etnum + 2;
         return;
@@ -434,7 +434,7 @@ void tablecommands(void)
         if (rtable[etnum][etpos])
         {
           if (!shiftpressed)
-        	{
+          {
             gototable(STBL, rtable[etnum][etpos] - 1);
             return;
           }
@@ -471,8 +471,8 @@ void tablecommands(void)
         }
         else
         {
-        	if (shiftpressed)
-        	{
+          if (shiftpressed)
+          {
             int pos = gettablelen(table);
             if (pos >= MAX_TABLELEN-1) pos = MAX_TABLELEN - 1;
             rtable[etnum][etpos] = pos + 1;
@@ -553,14 +553,14 @@ void deletetable(int num, int pos)
   // Shift tablepointers in wavetable commands
   for (c = 0; c < MAX_TABLELEN; c++)
   {
-  	if ((ltable[WTBL][c] >= WAVECMD) && (ltable[WTBL][c] <= WAVELASTCMD))
+    if ((ltable[WTBL][c] >= WAVECMD) && (ltable[WTBL][c] <= WAVELASTCMD))
     {
       int cmd = ltable[WTBL][c] & 0xf;
 
       if (num < STBL)
       {
-      	if (cmd == CMD_SETWAVEPTR+num)
-      	{
+        if (cmd == CMD_SETWAVEPTR+num)
+        {
           if ((rtable[WTBL][c]-1) > pos) rtable[WTBL][c]--;
         }
       }
@@ -642,21 +642,21 @@ void inserttable(int num, int pos, int mode)
   // Shift tablepointers in wavetable commands
   for (c = 0; c < MAX_TABLELEN; c++)
   {
-  	if ((ltable[WTBL][c] >= WAVECMD) && (ltable[WTBL][c] <= WAVELASTCMD))
+    if ((ltable[WTBL][c] >= WAVECMD) && (ltable[WTBL][c] <= WAVELASTCMD))
     {
       int cmd = ltable[WTBL][c] & 0xf;
 
       if (num < STBL)
       {
-      	if (cmd == CMD_SETWAVEPTR+num)
-      	{
+        if (cmd == CMD_SETWAVEPTR+num)
+        {
           if (!mode)
           {
-          	if ((rtable[WTBL][c]-1) >= pos) rtable[WTBL][c]++;
+            if ((rtable[WTBL][c]-1) >= pos) rtable[WTBL][c]++;
           }
           else
           {
-          	if ((rtable[WTBL][c]-1) > pos) rtable[WTBL][c]++;
+            if ((rtable[WTBL][c]-1) > pos) rtable[WTBL][c]++;
           }
         }
       }
@@ -815,27 +815,27 @@ void optimizetable(int num)
 
   for (c = 0; c < MAX_TABLELEN; c++)
   {
-  	if (tableused[WTBL][c+1])
-  	{
+    if (tableused[WTBL][c+1])
+    {
       if ((ltable[WTBL][c] >= WAVECMD) && (ltable[WTBL][c] <= WAVELASTCMD))
       {
-  	  	d = -1;
+        d = -1;
 
         switch(ltable[WTBL][c] - WAVECMD)
         {
-      	  case CMD_PORTAUP:
-      	  case CMD_PORTADOWN:
+          case CMD_PORTAUP:
+          case CMD_PORTADOWN:
           case CMD_TONEPORTA:
           case CMD_VIBRATO:
           d = STBL;
           break;
 
-      		case CMD_SETPULSEPTR:
-      		d = PTBL;
-  	   		break;
+          case CMD_SETPULSEPTR:
+          d = PTBL;
+           break;
 
-  	   		case CMD_SETFILTERPTR:
-  	   		d = FTBL;
+           case CMD_SETFILTERPTR:
+           d = FTBL;
           break;
         }
 

@@ -1,5 +1,5 @@
 //
-// GOATTRACKER v2.70
+// GOATTRACKER v2.71
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -64,6 +64,7 @@ unsigned interpolate = 0;
 unsigned residdelay = 0;
 unsigned hardsidbufinteractive = 20;
 unsigned hardsidbufplayback = 400;
+float basepitch = 0.0f;
 
 char configbuf[MAX_PATHNAME];
 char loadedsongfilename[MAX_FILENAME];
@@ -75,7 +76,7 @@ char instrfilter[MAX_FILENAME];
 char instrpath[MAX_PATHNAME];
 char packedpath[MAX_PATHNAME];
 
-char *programname = "$VER: GoatTracker v2.70";
+char *programname = "$VER: GoatTracker v2.71";
                                       
 char textbuffer[MAX_PATHNAME];
 
@@ -144,6 +145,7 @@ int main(int argc, char **argv)
     getfloatparam(configfile, &filterparams.type4b);
     getfloatparam(configfile, &filterparams.voicenonlinearity);
     getparam(configfile, &win_fullscreen);
+    getfloatparam(configfile, &basepitch);
     fclose(configfile);
   }
 
@@ -165,10 +167,11 @@ int main(int argc, char **argv)
         case '?':
         if (!initscreen())
           return 1;
-	if(argv[c][2]=='?') {
-	  onlinehelp(1,0);
-	  return 0;
-	}
+        if(argv[c][2]=='?') 
+        {
+          onlinehelp(1,0);
+          return 0;
+        }
         printtext(0,y++,15,"Usage: GOATTRK2 [songname] [options]");
         printtext(0,y++,15,"Options:");
         printtext(0,y++,15,"-Axx Set ADSR parameter for hardrestart in hex. DEFAULT=0F00");
@@ -177,6 +180,7 @@ int main(int argc, char **argv)
         printtext(0,y++,15,"-Dxx Pattern row display (0 = decimal, 1 = hexadecimal)");
         printtext(0,y++,15,"-Exx Set emulated SID model (0 = 6581 1 = 8580) DEFAULT=6581");
         printtext(0,y++,15,"-Fxx Set custom SID clock cycles per second (0 = use PAL/NTSC default)");
+        printtext(0,y++,15,"-Gxx Set pitch of A-4 in Hz (0 = use default frequencytable, close to 440Hz)");
         printtext(0,y++,15,"-Hxx Use HardSID (0 = off, 1 = HardSID ID0 2 = HardSID ID1 etc.)");
         printtext(0,y++,15,"-Ixx Set reSID interpolation (0 = off, 1 = on, 2 = distortion, 3 = distortion & on) DEFAULT=off");
         printtext(0,y++,15,"-Kxx Note-entry mode (0 = PROTRACKER 1 = DMC) DEFAULT=PROTRK.");
@@ -187,9 +191,9 @@ int main(int argc, char **argv)
         printtext(0,y++,15,"-Sxx Set speed multiplier (0 for 25Hz, 1 for 1x, 2 for 2x etc.)");
         printtext(0,y++,15,"-Txx Set HardSID interactive mode sound buffer length in milliseconds DEFAULT=20, max.buffering=0");
         printtext(0,y++,15,"-Uxx Set HardSID playback mode sound buffer length in milliseconds DEFAULT=400, max.buffering=0");
-        printtext(0,y++,15,"-Vxx Set finevibrato conversion (0 = off, 1 = on) DEFAULT=1");
-        printtext(0,y++,15,"-Xxx Set window type (0 = window, 1 = fullscreen) DEFAULT=0");
-        printtext(0,y++,15,"-Zxx Set random reSID write delay in cycles (0 = off) DEFAULT=0");
+        printtext(0,y++,15,"-Vxx Set finevibrato conversion (0 = off, 1 = on) DEFAULT=on");
+        printtext(0,y++,15,"-Xxx Set window type (0 = window, 1 = fullscreen) DEFAULT=window");
+        printtext(0,y++,15,"-Zxx Set random reSID write delay in cycles (0 = off) DEFAULT=off");
         printtext(0,y++,15,"-N   Use NTSC timing");
         printtext(0,y++,15,"-P   Use PAL timing (DEFAULT)");
         printtext(0,y++,15,"-W   Write sound output to a file SIDAUDIO.RAW");
@@ -287,6 +291,10 @@ int main(int argc, char **argv)
         case 'C':
         sscanf(&argv[c][2], "%u", &catweasel);
         break;
+
+        case 'G':
+        sscanf(&argv[c][2], "%f", &basepitch);
+        break;
       }
     }
     else
@@ -324,6 +332,12 @@ int main(int argc, char **argv)
   if (optimizerealtime > 1) optimizerealtime = 1;
   if (residdelay > 63) residdelay = 63;
   if (customclockrate < 100) customclockrate = 0;
+
+  // Calculate frequencytable if necessary
+  if (basepitch < 0.0f)
+    basepitch = 0.0f;
+  if (basepitch > 0.0f)
+    calculatefreqtable();
 
   // Set screenmode
   if (!initscreen())
@@ -407,7 +421,8 @@ int main(int argc, char **argv)
                         ";reSID-fp type 4 k\n%f\n\n"
                         ";reSID-fp type 4 b\n%f\n\n"
                         ";reSID-fp voice nonlinearity\n%f\n\n"
-                        ";Window type (0 = window, 1 = fullscreen)\n%d\n\n",
+                        ";Window type (0 = window, 1 = fullscreen)\n%d\n\n"
+                        ";Base pitch of A-4 in Hz (0 = use default frequencytable)\n%f\n\n",
     b,
     mr,
     hardsid,
@@ -442,7 +457,8 @@ int main(int argc, char **argv)
     filterparams.type4k,
     filterparams.type4b,
     filterparams.voicenonlinearity,
-    win_fullscreen);
+    win_fullscreen,
+    basepitch);
     fclose(configfile);
   }
 
@@ -1360,5 +1376,22 @@ void nextmultiplier(void)
   {
     multiplier++;
     sound_init(b, mr, writer, hardsid, sidmodel, ntsc, multiplier, catweasel, interpolate, customclockrate);
+  }
+}
+
+void calculatefreqtable()
+{
+  double basefreq = (double)basepitch * (16777216.0 / 985248.0) * pow(2.0, 0.25) / 32.0;
+  int c;
+
+  for (c = 0; c < 8*12 ; c++)
+  {
+    double note = c;
+    double freq = basefreq * pow(2.0, note/12.0);
+    int intfreq = freq + 0.5;
+    if (intfreq > 0xffff)
+        intfreq = 0xffff;
+    freqtbllo[c] = intfreq & 0xff;
+    freqtblhi[c] = intfreq >> 8;
   }
 }

@@ -816,17 +816,17 @@ void loadsong(void)
     // Convert pulsemodulation speed of < v2.4 songs
     if (ident[3] < '4')
     {
-    	for (c = 0; c < MAX_TABLELEN; c++)
-    	{
-    		if ((ltable[PTBL][c] < 0x80) && (rtable[PTBL][c]))
-    		{
-    			int speed = ((signed char)rtable[PTBL][c]);
-    			speed <<= 1;
-    			if (speed > 127) speed = 127;
-    			if (speed < -128) speed = -128;
-    			rtable[PTBL][c] = speed;
-    		}
-    	}
+      for (c = 0; c < MAX_TABLELEN; c++)
+      {
+        if ((ltable[PTBL][c] < 0x80) && (rtable[PTBL][c]))
+        {
+          int speed = ((signed char)rtable[PTBL][c]);
+          speed <<= 1;
+          if (speed > 127) speed = 127;
+          if (speed < -128) speed = -128;
+          rtable[PTBL][c] = speed;
+        }
+      }
     }
 
     // Convert old legato/nohr parameters
@@ -912,8 +912,8 @@ void loadinstrument(void)
           }
           if (c == PTBL)
           {
-          	pulsestart = start;
-          	pulseend = start + len;
+            pulsestart = start;
+            pulseend = start + len;
           }
           instr[einum].ptr[c] = start + 1;
         }
@@ -972,8 +972,8 @@ void loadinstrument(void)
           }
           if (c == PTBL)
           {
-          	pulsestart = start;
-          	pulseend = start + len;
+            pulsestart = start;
+            pulseend = start + len;
           }
           instr[einum].ptr[c] = start + 1;
         }
@@ -1202,17 +1202,17 @@ void loadinstrument(void)
     // Convert pulsemodulation speed of < v2.4 instruments
     if ((ident[3] < '4') && (pulsestart != -1))
     {
-    	for (c = pulsestart; (c < pulseend) && (c < MAX_TABLELEN); c++)
-    	{
-    		if ((ltable[PTBL][c] < 0x80) && (rtable[PTBL][c]))
-    		{
-    			int speed = ((signed char)rtable[PTBL][c]);
-    			speed <<= 1;
-    			if (speed > 127) speed = 127;
-    			if (speed < -128) speed = -128;
-    			rtable[PTBL][c] = speed;
-    		}
-    	}
+      for (c = pulsestart; (c < pulseend) && (c < MAX_TABLELEN); c++)
+      {
+        if ((ltable[PTBL][c] < 0x80) && (rtable[PTBL][c]))
+        {
+          int speed = ((signed char)rtable[PTBL][c]);
+          speed <<= 1;
+          if (speed > 127) speed = 127;
+          if (speed < -128) speed = -128;
+          rtable[PTBL][c] = speed;
+        }
+      }
     }
     // Convert old legato/nohr parameters
     if (ident[3] < '5')
@@ -1294,7 +1294,7 @@ void clearsong(int cs, int cp, int ci, int ct, int cn)
   {
     memset(loadedsongfilename, 0, sizeof loadedsongfilename);
     for (c = 0; c < MAX_PATT; c++)
-    	clearpattern(c);
+      clearpattern(c);
   }
   if (ci)
   {
@@ -1401,7 +1401,7 @@ int insertpattern(int p)
   
   for (c = 0; c < MAX_CHN; c++)
   {
-  	if ((epnum[c] > p) && (epnum[c] != MAX_PATT-1)) epnum[c]++;
+    if ((epnum[c] > p) && (epnum[c] != MAX_PATT-1)) epnum[c]++;
   }
 
   return 1;
@@ -1436,7 +1436,7 @@ void deletepattern(int p)
   
   for (c = 0; c < MAX_CHN; c++)
   {
-  	if (epnum[c] > p) epnum[c]--;
+    if (epnum[c] > p) epnum[c]--;
   }
 }
 
@@ -1481,15 +1481,15 @@ void findduplicatepatterns(void)
 
   for (c = 0; c < MAX_PATT; c++)
   {
-  	if (pattused[c])
-  	{
-  	  for (d = c+1; d < MAX_PATT; d++)
-  	  {
-  		  if (pattlen[d] == pattlen[c])
-  		  {
+    if (pattused[c])
+    {
+      for (d = c+1; d < MAX_PATT; d++)
+      {
+        if (pattlen[d] == pattlen[c])
+        {
           if (!memcmp(pattern[c], pattern[d], pattlen[c]*4))
           {
-          	int f, g, h;
+            int f, g, h;
 
             for (f = 0; f < MAX_SONGS; f++)
             {
@@ -1508,7 +1508,7 @@ void findduplicatepatterns(void)
               }
             }
             for (f = 0; f < MAX_CHN; f++)
-            	if (epnum[f] == d) epnum[f] = c;
+              if (epnum[f] == d) epnum[f] = c;
           }
         }
       }
@@ -1550,7 +1550,7 @@ void optimizeeverything(int oi, int ot)
     {
       if (!instrused[c])
       {
-      	clearinstr(c);
+        clearinstr(c);
 
         if (c < MAX_INSTR-2)
         {

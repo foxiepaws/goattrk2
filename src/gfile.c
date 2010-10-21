@@ -245,18 +245,18 @@ int fileselector(char *name, char *path, char *filter, char *title, int filemode
 
     if (!filemode)
     {
-    	if (((key >= '0') && (key <= '0')) || ((key >= 'a') && (key <= 'z')) || ((key >= 'A') && (key <= 'Z')))
-    	{
+      if (((key >= '0') && (key <= '0')) || ((key >= 'a') && (key <= 'z')) || ((key >= 'A') && (key <= 'Z')))
+      {
         char k = tolower(key);
         int oldfilepos = filepos;
 
-    		for (filepos = oldfilepos + 1; filepos < files; filepos++)
-    	    if (tolower(direntry[filepos].name[0]) == k) break;
-    	  if (filepos >= files)
-    	  {
-    		  for (filepos = 0; filepos < oldfilepos; filepos++)
-    	   	  if (tolower(direntry[filepos].name[0]) == k) break;
-    	  }
+        for (filepos = oldfilepos + 1; filepos < files; filepos++)
+          if (tolower(direntry[filepos].name[0]) == k) break;
+        if (filepos >= files)
+        {
+          for (filepos = 0; filepos < oldfilepos; filepos++)
+             if (tolower(direntry[filepos].name[0]) == k) break;
+        }
 
         if (!direntry[filepos].attribute) strcpy(name, direntry[filepos].name);
       }
@@ -527,5 +527,4 @@ int cmpname(char *string1, char *string2)
     if ((!char1) || (!char2)) return 0;
   }
 }
-
 
