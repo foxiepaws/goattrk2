@@ -210,9 +210,15 @@ void relocator(void)
             {
               notrans = 0;
               if (songorder[c][d][e] < TRANSUP)
-                transdownrange = -(songorder[c][d][e] - TRANSUP);
+              {
+                int newtransdownrange = -(songorder[c][d][e] - TRANSUP);
+                if (newtransdownrange > transdownrange) transdownrange = newtransdownrange;
+              }
               else
-                transuprange = songorder[c][d][e] - TRANSUP;
+              {
+                int newtransuprange = songorder[c][d][e] - TRANSUP;
+                if (newtransuprange > transuprange) transuprange = newtransuprange;
+              }
             }
             else norepeat = 0;
           }

@@ -1,4 +1,4 @@
-GoatTracker v2.71
+GoatTracker v2.72
 -----------------
 
 Editor by Lasse Öörni (loorni@gmail.com)
@@ -1862,3 +1862,5 @@ v2.71     - Added keycode fix patch from Valerio Cannone.
           - Added fullscreen switch patch from Raine M. Ekman (see /X option)
           - Added context mode to online help patch from Raine M. Ekman.
           - Added /G command line option for setting A-4 pitch.
+          
+v2.72     - Fixed incorrect transpose range determination in the relocator.
