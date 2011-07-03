@@ -1864,3 +1864,5 @@ v2.71     - Added keycode fix patch from Valerio Cannone.
           - Added /G command line option for setting A-4 pitch.
           
 v2.72     - Fixed incorrect transpose range determination in the relocator.
+          - Fixed crash in jam mode whan an illegal pattern command was executed
+            from the wavetable.
