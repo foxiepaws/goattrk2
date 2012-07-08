@@ -1355,6 +1355,10 @@ mt_loadregswaveonly:
                 bne mt_sfxexec
               .ENDIF
               .IF (ZPGHOSTREGS == 0)
+                lda mt_chnad,x
+                sta SIDBASE+$05,x
+                lda mt_chnsr,x
+                sta SIDBASE+$06,x
                 lda mt_chnpulselo,x
               .IF (SIMPLEPULSE == 0)
                 sta SIDBASE+$02,x
@@ -1364,10 +1368,6 @@ mt_loadregswaveonly:
                 sta SIDBASE+$02,x
                 sta SIDBASE+$03,x
               .ENDIF
-                lda mt_chnsr,x
-                sta SIDBASE+$06,x              
-                lda mt_chnad,x
-                sta SIDBASE+$05,x
 mt_loadregswavefreq:
                 lda mt_chnfreqlo,x
                 sta SIDBASE+$00,x
