@@ -9,7 +9,7 @@ Uses 6510 crossassembler from Exomizer2 beta by Magnus Lind.
 Uses the SDL library.
 GoatTracker icon by Antonio Vera.
 Command quick reference by Simon Bennett.
-Patches by Stefan A. Haubenthal, Valerio Cannone and Raine M. Ekman.
+Patches by Stefan A. Haubenthal, Valerio Cannone, Raine M. Ekman and Tero Lindeman.
 
 Distributed under GNU General Public License
 (see the file COPYING for details)
