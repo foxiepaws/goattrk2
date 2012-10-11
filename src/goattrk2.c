@@ -1,5 +1,5 @@
 //
-// GOATTRACKER v2.72
+// GOATTRACKER v2.73
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -76,7 +76,7 @@ char instrfilter[MAX_FILENAME];
 char instrpath[MAX_PATHNAME];
 char packedpath[MAX_PATHNAME];
 
-char *programname = "$VER: GoatTracker v2.72";
+char *programname = "$VER: GoatTracker v2.73";
                                       
 char textbuffer[MAX_PATHNAME];
 
@@ -1047,8 +1047,16 @@ void load(void)
 {
   if ((editmode != EDIT_INSTRUMENT) && (editmode != EDIT_TABLES))
   {
-    if (fileselector(songfilename, songpath, songfilter, "LOAD SONG", 0))
-      loadsong();
+    if (!shiftpressed)
+    {
+      if (fileselector(songfilename, songpath, songfilter, "LOAD SONG", 0))
+        loadsong();
+    }
+    else
+    {
+      if (fileselector(songfilename, songpath, songfilter, "MERGE SONG", 0))
+        mergesong();
+    }
   }
   else
   {

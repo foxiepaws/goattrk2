@@ -322,6 +322,7 @@ SHIFT+F5  Decrease speed multiplier
 SHIFT+F6  Increase speed multiplier
 SHIFT+F7  Edit hardrestart ADSR parameter
 SHIFT+F8  Switch between 6581 and 8580 SID models
+SHIFT+F10 Merge-load song
 SHIFT+,.  Move song startposition on all channels and restart last playmode
 TAB       Cycle between editing modes (forwards)
 SHIFT+TAB Cycle between editing modes (backwards)
@@ -1866,3 +1867,7 @@ v2.71     - Added keycode fix patch from Valerio Cannone.
 v2.72     - Fixed incorrect transpose range determination in the relocator.
           - Fixed crash in jam mode whan an illegal pattern command was executed
             from the wavetable.
+            
+v2.73     - Reverted to old playroutine timing.
+          - Merge song functionality (SHIFT+F10.)
+
