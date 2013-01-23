@@ -88,6 +88,7 @@ int main(int argc, char **argv)
   if (!out)
   {
     printf("Destination open error.\n");
+    fclose(in);
     return 1;
   }
   if (argc > 3)
@@ -97,6 +98,8 @@ int main(int argc, char **argv)
     if ((leaveout < 0) || (leaveout > 3))
     {
       printf("Illegal channel number.\n");
+      fclose(in);
+      fclose(out);
       return 1;
     }
   }
