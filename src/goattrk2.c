@@ -166,11 +166,11 @@ int main(int argc, char **argv)
       {
         case '?':
         if (!initscreen())
-          return 1;
+          return EXIT_FAILURE;
         if(argv[c][2]=='?') 
         {
           onlinehelp(1,0);
-          return 0;
+          return EXIT_SUCCESS;
         }
         printtext(0,y++,15,"Usage: GOATTRK2 [songname] [options]");
         printtext(0,y++,15,"Options:");
@@ -200,7 +200,7 @@ int main(int argc, char **argv)
         printtext(0,y++,15,"-?   Show this info again");
         printtext(0,y++,15,"-??  Standalone online help window");	
         waitkeynoupdate();
-        return 0;
+        return EXIT_SUCCESS;
 
         case 'Z':
         sscanf(&argv[c][2], "%u", &residdelay);
@@ -341,7 +341,7 @@ int main(int argc, char **argv)
 
   // Set screenmode
   if (!initscreen())
-    return 1;
+    return EXIT_FAILURE;
 
   // Reset channels/song
   initchannels();
@@ -463,7 +463,7 @@ int main(int argc, char **argv)
   }
 
   // Exit
-  return 0;
+  return EXIT_SUCCESS;
 }
 
 void waitkey(void)

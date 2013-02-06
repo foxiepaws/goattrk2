@@ -75,21 +75,21 @@ int main(int argc, char **argv)
            "[channel] is the channel to leave out (1-4), default 4\n"
            "[transpose] is the halfstep transpose added to notes, default 0\n");
 
-    return 1;
+    return EXIT_FAILURE;
   }
 
   in = fopen(argv[1], "rb");
   if (!in)
   {
     printf("Source open error.\n");
-    return 1;
+    return EXIT_FAILURE;
   }
   out = fopen(argv[2], "wb");
   if (!out)
   {
     printf("Destination open error.\n");
     fclose(in);
-    return 1;
+    return EXIT_FAILURE;
   }
   if (argc > 3)
   {
@@ -100,7 +100,7 @@ int main(int argc, char **argv)
       printf("Illegal channel number.\n");
       fclose(in);
       fclose(out);
-      return 1;
+      return EXIT_FAILURE;
     }
   }
 
@@ -256,7 +256,7 @@ int main(int argc, char **argv)
           if (goatpatt >= 208)
           {
             printf("208 patterns exceeded!\n");
-            return 1;
+            return EXIT_FAILURE;
           }
           for (f = 0; f < 65; f++)
           {
@@ -318,6 +318,5 @@ int main(int argc, char **argv)
   }
   fclose(out);
   printf("Converted successfully.\n");
-  return 0;
+  return EXIT_SUCCESS;
 }
-
