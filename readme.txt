@@ -1184,6 +1184,35 @@ Usage: BETACONV <source> <destination> [vibdepth] [pulse]
        [vibdepth] decides whether to halve vibdepth (1=yes 0=no), default 0
        [pulse] decides whether to halve pulse speed (1=yes 0=no), default 0
 
+4.5 GT2RELOC.EXE
+----------------
+
+This is a standalone version of the packer/relocator. It converts .sng files
+into .bin, .prg or .sid depending on outfiles extension.
+
+Usage: GT2RELOC <songname> <outfile> [options]
+
+Options:
+-Axx Set ADSR parameter for hardrestart in hex. DEFAULT=0F00
+-Bx  enable/disable buffered SID writes. DEFAULT=disabled
+-Cx  enable/disable zeropage ghost registers. DEFAULT=disabled
+-Dx  enable/disable sound effect support. DEFAULT=disabled
+-Ex  enable/disable volume change support. DEFAULT=disabled
+-Fxx Set custom SID clock cycles per second (0 = use PAL/NTSC default)
+-Gxx Set pitch of A-4 in Hz (0 = use default frequencytable, close to 440Hz)
+-Hx  enable/disable storing of author info. DEFAULT=disabled
+-Ix  enable/disable optimizations. DEFAULT=enabled
+-Lxx SID memory location in hex. DEFAULT=D400
+-N   Use NTSC timing
+-Oxx Set pulseoptimization/skipping (0 = off, 1 = on) DEFAULT=on
+-P   Use PAL timing (DEFAULT)
+-Rxx Set realtime-effect optimization/skipping (0 = off, 1 = on) DEFAULT=on
+-Sxx Set speed multiplier (0 for 25Hz, 1 for 1x, 2 for 2x etc.) DEFAULT=1
+-Vxx Set finevibrato conversion (0 = off, 1 = on) DEFAULT=on
+-Wxx player memory location highbyte in hex. DEFAULT=1000
+-Zxx zeropage memory location in hex. DEFAULT=FC
+-?   Show options
+
 
 5. Using the songs outside the editor
 -------------------------------------

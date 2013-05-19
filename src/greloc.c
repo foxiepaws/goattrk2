@@ -82,10 +82,21 @@ int nozerospeed;
 struct membuf src = STATIC_MEMBUF_INIT;
 struct membuf dest = STATIC_MEMBUF_INIT;
 
+#ifdef GT2RELOC
+extern char packedsongname[MAX_PATHNAME];
+#define clearscreen()
+#define fliptoscreen()
+#define waitkeynoupdate()
+#define printtextc(x, y, b) fputs(b, stderr)
+#define printmainscreen()
+#endif
+
 void relocator(void)
 {
+#ifndef GT2RELOC
   char packedsongname[MAX_FILENAME];
   char packedfilter[MAX_FILENAME];
+#endif
   unsigned char *packeddata = NULL;
   char *playername = "player.s";
 
@@ -492,6 +503,7 @@ void relocator(void)
     findtableduplicates(c);
 
   // Select playroutine options
+#ifndef GT2RELOC
   clearscreen();
   printblankc(0, 0, 15+16, MAX_COLUMNS);
   if (!strlen(loadedsongfilename))
@@ -565,6 +577,7 @@ void relocator(void)
     }
   }
   if (selectdone == -1) goto PRCLEANUP;
+#endif
 
   // Disable optimizations if necessary
   if (playerversion & PLAYER_NOOPTIMIZATION)
@@ -913,6 +926,10 @@ void relocator(void)
   if (nopulse) pulsetblsize = 0;
   if (nofilter) filttblsize = 0;
 
+#ifdef GT2RELOC
+  printf("Player address:   $%04X\n", playeradr);
+  printf("Zeropage address: $%04X\n", zeropageadr);
+#else
   sprintf(textbuffer, "SELECT START ADDRESS: (CURSORS=MOVE, ENTER=ACCEPT, ESC=CANCEL)");
   printtext(1, 10, 15, textbuffer);
 
@@ -1038,6 +1055,7 @@ void relocator(void)
   }
 
   if (selectdone == -1) goto PRCLEANUP;
+#endif
 
   // Validate frequencytable parameters
   if (lastnote < firstnote)
@@ -1377,6 +1395,25 @@ void relocator(void)
   }
 
   // Print results
+#ifdef GT2RELOC
+  printf("packing results:\n");
+  printf("Playroutine:     %d bytes\n", playersize);
+  printf("Songtable:       %d bytes\n", songtblsize);
+  printf("Song-orderlists: %d bytes\n", songdatasize);
+  printf("Patterntable:    %d bytes\n", patttblsize);
+  printf("Patterns:        %d bytes\n", pattdatasize);
+  printf("Instruments:     %d bytes\n", instrsize);
+  printf("Tables:          %d bytes\n", wavetblsize+pulsetblsize+filttblsize+speedtblsize);
+  printf("Total size:      %d bytes\n", packedsize);
+
+  songhandle = fopen(packedsongname, "wb");
+  if (!songhandle) 
+  {
+      fprintf(stderr, "error: could not open output file '%s'.\n", packedsongname);
+      goto PRCLEANUP;
+  }
+
+#else
   clearscreen();
   printblankc(0, 0, 15+16, MAX_COLUMNS);
   if (!strlen(loadedsongfilename))
@@ -1522,6 +1559,7 @@ void relocator(void)
     }
     songhandle = fopen(packedsongname, "wb");
   }
+#endif
 
   if (fileformat == FORMAT_PRG)
   {
