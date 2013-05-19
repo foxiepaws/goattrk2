@@ -62,6 +62,7 @@ Table of contents
 4.2 SNGSPLI2.EXE
 4.3 MOD2SNG.EXE
 4.4 BETACONV.EXE
+4.5 GT2RELOC.EXE
 
 5. Using the songs outside the editor
 5.1 Playroutine options
