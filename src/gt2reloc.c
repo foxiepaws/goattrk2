@@ -83,36 +83,52 @@ char textbuffer[MAX_PATHNAME];
 
 extern unsigned char datafile[];
 
+#ifdef __WIN32__
+FILE *STDOUT, *STDERR;
+#else
+#define STDOUT stdout
+#define STDERR stderr
+#endif
+
 void usage(void)
 {
-    printf("Usage: GT2RELOC <songname> <outfile> [options]\n");
-    printf("Options:\n");
-    printf("-Axx Set ADSR parameter for hardrestart in hex. DEFAULT=0F00\n");
-    printf("-Bx  enable/disable buffered SID writes. DEFAULT=disabled\n");
-    printf("-Cx  enable/disable zeropage ghost registers. DEFAULT=disabled\n");
-    printf("-Dx  enable/disable sound effect support. DEFAULT=disabled\n");
-    printf("-Ex  enable/disable volume change support. DEFAULT=disabled\n");
-    printf("-Fxx Set custom SID clock cycles per second (0 = use PAL/NTSC default)\n");
-    printf("-Gxx Set pitch of A-4 in Hz (0 = use default frequencytable, close to 440Hz)\n");
-    printf("-Hx  enable/disable storing of author info. DEFAULT=disabled\n");
-    printf("-Ix  enable/disable optimizations. DEFAULT=enabled\n");
-    printf("-Lxx SID memory location in hex. DEFAULT=D400\n");
-    printf("-N   Use NTSC timing\n");
-    printf("-Oxx Set pulseoptimization/skipping (0 = off, 1 = on) DEFAULT=on\n");
-    printf("-P   Use PAL timing (DEFAULT)\n");
-    printf("-Rxx Set realtime-effect optimization/skipping (0 = off, 1 = on) DEFAULT=on\n");
-    printf("-Sxx Set speed multiplier (0 for 25Hz, 1 for 1x, 2 for 2x etc.) DEFAULT=1\n");
-    printf("-Vxx Set finevibrato conversion (0 = off, 1 = on) DEFAULT=on\n");
-    printf("-Wxx player memory location highbyte in hex. DEFAULT=1000\n");
-    printf("-Zxx zeropage memory location in hex. DEFAULT=FC\n");
-    printf("-?   Show options\n");
+    fprintf(STDOUT, "Usage: GT2RELOC <songname> <outfile> [options]\n");
+    fprintf(STDOUT, "Options:\n");
+    fprintf(STDOUT, "-Axx Set ADSR parameter for hardrestart in hex. DEFAULT=0F00\n");
+    fprintf(STDOUT, "-Bx  enable/disable buffered SID writes. DEFAULT=disabled\n");
+    fprintf(STDOUT, "-Cx  enable/disable zeropage ghost registers. DEFAULT=disabled\n");
+    fprintf(STDOUT, "-Dx  enable/disable sound effect support. DEFAULT=disabled\n");
+    fprintf(STDOUT, "-Ex  enable/disable volume change support. DEFAULT=disabled\n");
+    fprintf(STDOUT, "-Fxx Set custom SID clock cycles per second (0 = use PAL/NTSC default)\n");
+    fprintf(STDOUT, "-Gxx Set pitch of A-4 in Hz (0 = use default frequencytable, close to 440Hz)\n");
+    fprintf(STDOUT, "-Hx  enable/disable storing of author info. DEFAULT=disabled\n");
+    fprintf(STDOUT, "-Ix  enable/disable optimizations. DEFAULT=enabled\n");
+    fprintf(STDOUT, "-Lxx SID memory location in hex. DEFAULT=D400\n");
+    fprintf(STDOUT, "-N   Use NTSC timing\n");
+    fprintf(STDOUT, "-Oxx Set pulseoptimization/skipping (0 = off, 1 = on) DEFAULT=on\n");
+    fprintf(STDOUT, "-P   Use PAL timing (DEFAULT)\n");
+    fprintf(STDOUT, "-Rxx Set realtime-effect optimization/skipping (0 = off, 1 = on) DEFAULT=on\n");
+    fprintf(STDOUT, "-Sxx Set speed multiplier (0 for 25Hz, 1 for 1x, 2 for 2x etc.) DEFAULT=1\n");
+    fprintf(STDOUT, "-Vxx Set finevibrato conversion (0 = off, 1 = on) DEFAULT=on\n");
+    fprintf(STDOUT, "-Wxx player memory location highbyte in hex. DEFAULT=1000\n");
+    fprintf(STDOUT, "-Zxx zeropage memory location in hex. DEFAULT=FC\n");
+    fprintf(STDOUT, "-?   Show options\n");
 }
 
 int main(int argc, char **argv)
 {
-  char filename[MAX_PATHNAME];
-  FILE *configfile;
   int c;
+
+#ifdef __WIN32__
+  /*
+    SDL_Init() reroutes stdout and stderr, either to stdout.txt and stderr.txt
+    or to nirwana. simply reopening these handles does, other than suggested on
+    some web pages, not work reliably - opening new files on CON using different
+    handles however does.
+  */
+  STDOUT = fopen("CON", "w");
+  STDERR = fopen("CON", "w");
+#endif
 
   programname += sizeof "$VER:";
   // Open datafile
@@ -135,13 +151,13 @@ int main(int argc, char **argv)
   if (strlen(songfilename)) {
       loadsong();
   } else {
-      fprintf(stderr, "error: no song filename given.\n");
+      fprintf(STDERR, "error: no song filename given.\n");
       exit (-1);
   }
 
   c = strlen(packedsongname);
   if (strlen(packedsongname) <= 0) {
-      fprintf(stderr, "error: no output filename given.\n");
+      fprintf(STDERR, "error: no output filename given.\n");
       exit (-1);
   }
 
@@ -160,16 +176,16 @@ int main(int argc, char **argv)
       fileformat = FORMAT_PRG;
   }
 
-  printf("%s Packer/Relocator\n", programname);
-  printf("song file:       %s\n", loadedsongfilename);
-  printf("output file:     %s\n", packedsongname);
-  printf("output format:   ");
+  fprintf(STDOUT, "%s Packer/Relocator\n", programname);
+  fprintf(STDOUT, "song file:       %s\n", loadedsongfilename);
+  fprintf(STDOUT, "output file:     %s\n", packedsongname);
+  fprintf(STDOUT, "output format:   ");
   if (fileformat == FORMAT_SID) {
-      printf("sid\n");
+      fprintf(STDOUT, "sid\n");
   } else if (fileformat == FORMAT_BIN) {
-      printf("bin\n");
+      fprintf(STDOUT, "bin\n");
   } else {
-      printf("prg\n");
+      fprintf(STDOUT, "prg\n");
   }
 
   // Scan command line
@@ -228,8 +244,6 @@ int main(int argc, char **argv)
         case 'F':
         sscanf(&argv[c][2], "%u", &customclockrate);
         break;
-
-#define PLAYER_NOOPTIMIZATION 256
 
         // player options (first menu)
         // 0: Buffered SID-writes
@@ -295,7 +309,7 @@ int main(int argc, char **argv)
     }
     else
     {
-      fprintf(stderr, "error: unknown option\n");
+      fprintf(STDERR, "error: unknown option\n");
       usage();
       exit(-1);
     }

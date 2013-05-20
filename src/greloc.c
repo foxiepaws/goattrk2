@@ -83,11 +83,17 @@ struct membuf src = STATIC_MEMBUF_INIT;
 struct membuf dest = STATIC_MEMBUF_INIT;
 
 #ifdef GT2RELOC
+#ifdef __WIN32__
+extern FILE *STDOUT, *STDERR;
+#else
+#define STDOUT stdout
+#define STDERR stderr
+#endif
 extern char packedsongname[MAX_PATHNAME];
 #define clearscreen()
 #define fliptoscreen()
 #define waitkeynoupdate()
-#define printtextc(x, y, b) fputs(b, stderr)
+#define printtextc(x, y, b) fputs(b, STDERR)
 #define printmainscreen()
 #endif
 
@@ -927,8 +933,8 @@ void relocator(void)
   if (nofilter) filttblsize = 0;
 
 #ifdef GT2RELOC
-  printf("Player address:   $%04X\n", playeradr);
-  printf("Zeropage address: $%04X\n", zeropageadr);
+  fprintf(STDOUT, "Player address:   $%04X\n", playeradr);
+  fprintf(STDOUT, "Zeropage address: $%04X\n", zeropageadr);
 #else
   sprintf(textbuffer, "SELECT START ADDRESS: (CURSORS=MOVE, ENTER=ACCEPT, ESC=CANCEL)");
   printtext(1, 10, 15, textbuffer);
@@ -1396,20 +1402,20 @@ void relocator(void)
 
   // Print results
 #ifdef GT2RELOC
-  printf("packing results:\n");
-  printf("Playroutine:     %d bytes\n", playersize);
-  printf("Songtable:       %d bytes\n", songtblsize);
-  printf("Song-orderlists: %d bytes\n", songdatasize);
-  printf("Patterntable:    %d bytes\n", patttblsize);
-  printf("Patterns:        %d bytes\n", pattdatasize);
-  printf("Instruments:     %d bytes\n", instrsize);
-  printf("Tables:          %d bytes\n", wavetblsize+pulsetblsize+filttblsize+speedtblsize);
-  printf("Total size:      %d bytes\n", packedsize);
+  fprintf(STDOUT, "packing results:\n");
+  fprintf(STDOUT, "Playroutine:     %d bytes\n", playersize);
+  fprintf(STDOUT, "Songtable:       %d bytes\n", songtblsize);
+  fprintf(STDOUT, "Song-orderlists: %d bytes\n", songdatasize);
+  fprintf(STDOUT, "Patterntable:    %d bytes\n", patttblsize);
+  fprintf(STDOUT, "Patterns:        %d bytes\n", pattdatasize);
+  fprintf(STDOUT, "Instruments:     %d bytes\n", instrsize);
+  fprintf(STDOUT, "Tables:          %d bytes\n", wavetblsize+pulsetblsize+filttblsize+speedtblsize);
+  fprintf(STDOUT, "Total size:      %d bytes\n", packedsize);
 
   songhandle = fopen(packedsongname, "wb");
   if (!songhandle) 
   {
-      fprintf(stderr, "error: could not open output file '%s'.\n", packedsongname);
+      fprintf(STDERR, "error: could not open output file '%s'.\n", packedsongname);
       goto PRCLEANUP;
   }
 
