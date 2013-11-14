@@ -9,7 +9,8 @@ Uses 6510 crossassembler from Exomizer2 beta by Magnus Lind.
 Uses the SDL library.
 GoatTracker icon by Antonio Vera.
 Command quick reference by Simon Bennett.
-Patches by Stefan A. Haubenthal, Valerio Cannone, Raine M. Ekman, Tero Lindeman and Henrik Paulini
+Patches and further development by Stefan A. Haubenthal, Valerio Cannone, Raine M. Ekman, 
+Tero Lindeman, Henrik Paulini and Groepaz
 
 Distributed under GNU General Public License
 (see the file COPYING for details)
@@ -1900,4 +1901,5 @@ v2.72     - Fixed incorrect transpose range determination in the relocator.
             
 v2.73     - Reverted to old playroutine timing.
           - Merge song functionality (SHIFT+F10.)
-
+          - Help text is written to console on non-Win32 platforms.
+          - gt2reloc utility by Groepaz.
