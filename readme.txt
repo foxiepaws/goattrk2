@@ -268,7 +268,8 @@ drivers installed to use this feature.
 
 CatWeasel MK3 PCI SID support is available with -C option (-C1 to turn on).
 
-To use the PC64 cable, you need Daniel Illgen's HardSID-DLL-Clone. Available at
+To use the PC64 cable or a userport RS-232 interface, get the HardSID-DLL-Clone
+drivers from Daniel Illgen's page
 http://dawork.synchronus.de/
 
 To enable better support of multispeeds and cycle-exact timing on HardSID
