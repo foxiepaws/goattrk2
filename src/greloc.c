@@ -15,7 +15,8 @@ char *playeroptname[] =
   "Volume change support",
   "Store author-info",
   "Use zeropage ghostregs",
-  "Disable optimization"
+  "Disable optimization",
+  "Full SID buffering"
 };
 
 char *tableleftname[] = {
@@ -550,7 +551,7 @@ void relocator(void)
       playerversion ^= (PLAYER_BUFFERED << opt);
       if (opt)
       {
-        if ((playerversion & PLAYER_SOUNDEFFECTS) || (playerversion & PLAYER_ZPGHOSTREGS))
+        if ((playerversion & PLAYER_SOUNDEFFECTS) || (playerversion & PLAYER_ZPGHOSTREGS) || (playerversion & PLAYER_FULLBUFFERED))
           playerversion |= PLAYER_BUFFERED;
       }
       else
@@ -559,6 +560,7 @@ void relocator(void)
         {
           playerversion &= ~PLAYER_SOUNDEFFECTS;
           playerversion &= ~PLAYER_ZPGHOSTREGS;
+          playerversion &= ~PLAYER_FULLBUFFERED;
         }
       }
       break;
@@ -627,11 +629,11 @@ void relocator(void)
   }
 
   // Make sure buffering is used if it is needed
-  if ((playerversion & PLAYER_SOUNDEFFECTS) || (playerversion & PLAYER_ZPGHOSTREGS))
+  if ((playerversion & PLAYER_SOUNDEFFECTS) || (playerversion & PLAYER_ZPGHOSTREGS) || (playerversion & PLAYER_FULLBUFFERED))
     playerversion |= PLAYER_BUFFERED;
 
   // Sound effect or ghostreg players always use full 3 channels
-  if ((playerversion & PLAYER_SOUNDEFFECTS) || (playerversion & PLAYER_ZPGHOSTREGS))
+  if ((playerversion & PLAYER_SOUNDEFFECTS) || (playerversion & PLAYER_FULLBUFFERED) || (playerversion & PLAYER_ZPGHOSTREGS))
     channels = 3;
 
   // Allocate memory for song-orderlists
@@ -937,13 +939,13 @@ void relocator(void)
   fprintf(STDOUT, "Zeropage address: $%04X\n", zeropageadr);
 #else
   sprintf(textbuffer, "SELECT START ADDRESS: (CURSORS=MOVE, ENTER=ACCEPT, ESC=CANCEL)");
-  printtext(1, 10, 15, textbuffer);
+  printtext(1, 11, 15, textbuffer);
 
   selectdone = 0;
   while (!selectdone)
   {
     sprintf(textbuffer, "$%04X", playeradr);
-    printtext(1, 11, 10, textbuffer);
+    printtext(1, 12, 10, textbuffer);
 
     fliptoscreen();
     waitkeynoupdate();
@@ -989,7 +991,7 @@ void relocator(void)
   if (selectdone == -1) goto PRCLEANUP;
 
   sprintf(textbuffer, "SELECT ZEROPAGE ADDRESS: (CURSORS=MOVE, ENTER=ACCEPT, ESC=CANCEL)");
-  printtext(1, 13, 15, textbuffer);
+  printtext(1, 14, 15, textbuffer);
 
   selectdone = 0;
   while (!selectdone)
@@ -1021,7 +1023,7 @@ void relocator(void)
       sprintf(textbuffer, "$%02X-$%02X (ghostregs start at %02X)", zeropageadr, zeropageadr+26, zeropageadr);
     }
 
-    printtext(1, 14, 10, textbuffer);
+    printtext(1, 15, 10, textbuffer);
 
     fliptoscreen();
     waitkeynoupdate();
@@ -1086,6 +1088,7 @@ void relocator(void)
   insertdefine("SOUNDSUPPORT", (playerversion & PLAYER_SOUNDEFFECTS) ? 1 : 0);
   insertdefine("VOLSUPPORT", (playerversion & PLAYER_VOLUME) ? 1 : 0);
   insertdefine("BUFFEREDWRITES", (playerversion & PLAYER_BUFFERED) ? 1 : 0);
+  insertdefine("GHOSTREGS", (playerversion & (PLAYER_ZPGHOSTREGS|PLAYER_FULLBUFFERED)) ? 1 : 0);
   insertdefine("ZPGHOSTREGS", (playerversion & PLAYER_ZPGHOSTREGS) ? 1 : 0);
   insertdefine("FIXEDPARAMS", fixedparams);
   insertdefine("SIMPLEPULSE", simplepulse);
@@ -1149,7 +1152,7 @@ void relocator(void)
   // Insert source code of player
   if (adparam >= 0xf000)
     playername = "altplayer.s";
-    
+
   if (!insertfile(playername))
   {
     clearscreen();
@@ -1157,6 +1160,22 @@ void relocator(void)
     fliptoscreen();
     waitkeynoupdate();
     goto PRCLEANUP;
+  }
+  
+  // Modify ghostregs to not be zeropage if needed
+  if ((playerversion & PLAYER_FULLBUFFERED) && (playerversion & PLAYER_ZPGHOSTREGS) == 0)
+  {
+    int bufsize = membuf_get_size(&src);
+    char* bufdata = (char*)membuf_get(&src);
+    int c;
+    for (c = 0; c < bufsize; c++)
+    {
+      if (bufdata[c] == '<')
+      {
+        if (memcmp(bufdata + c + 1, "ghost", 5) == 0)
+          bufdata[c] = ' ';
+      }
+    }
   }
 
   // Insert frequencytable

@@ -103,6 +103,7 @@ void usage(void)
     fprintf(STDOUT, "-Gxx Set pitch of A-4 in Hz (0 = use default frequencytable, close to 440Hz)\n");
     fprintf(STDOUT, "-Hx  enable/disable storing of author info. DEFAULT=disabled\n");
     fprintf(STDOUT, "-Ix  enable/disable optimizations. DEFAULT=enabled\n");
+    fprintf(STDOUT, "-Jx  enable/disable full buffering. DEFAULT=disabled\n");
     fprintf(STDOUT, "-Lxx SID memory location in hex. DEFAULT=D400\n");
     fprintf(STDOUT, "-N   Use NTSC timing\n");
     fprintf(STDOUT, "-Oxx Set pulseoptimization/skipping (0 = off, 1 = on) DEFAULT=on\n");
@@ -292,6 +293,13 @@ int main(int argc, char **argv)
                 playerversion &= ~PLAYER_NOOPTIMIZATION;
             } else {
                 playerversion |= PLAYER_NOOPTIMIZATION;
+            }
+        // 6: Full buffering
+        case 'J':
+            if (argv[c][2] == '1') {
+                playerversion &= ~PLAYER_FULLBUFFERED;
+            } else {
+                playerversion |= PLAYER_FULLBUFFERED;
             }
         break;
 
