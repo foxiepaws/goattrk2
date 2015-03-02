@@ -27,7 +27,7 @@ all: dirs bme ${EXE}
 dirs:
 	mkdir -p ${BINDIR} ${OBJDIR} ${DESTDIR}
 
-CSRC=$(wildcard ${SRCDIR}/*.c) $(wildcard ${SRCDIR}/*/*.c)
+CSRC=$(wildcard ${SRCDIR}/*.c) $(wildcard ${SRCDIR}/*/*.c) ${SRCDIR}/goatdata.c
 CXXSRC=$(wildcard ${SRCDIR}/*.cpp) $(wildcard ${SRCDIR}/*/*.cpp)
 
 COBJ=${CSRC:${SRCDIR}/%.c=${OBJDIR}/%.o}
@@ -48,13 +48,12 @@ ${SRCDIR}/bme/datafile: ${SRCDIR}/bme/datafile.c ${SRCDIR}/bme/bme_end.c
 ${SRCDIR}/bme/dat2inc: ${SRCDIR}/bme/dat2inc.c
 	${CC} ${CFLAGS} ${LIBINC} -o $@ $<
 
-${SRCDIR}/goattrk2.dat: ${SRCDIR}/player.s ${SRCDIR}/altplayer.s \
+${SRCDIR}/goattrk2.dat: ${SRCDIR}/bme/datafile ${SRCDIR}/player.s ${SRCDIR}/altplayer.s \
 	  ${SRCDIR}/chargen.bin ${SRCDIR}/palette.bin ${SRCDIR}/cursor.bin \
           ${SRCDIR}/goattrk2.bmp ${SRCDIR}/goattrk2.seq
 	 # this is a little nasty, but its possibly the only way to do this.
 	 echo goattrk2.dat hack
 	 echo `cd src; bme/datafile goattrk2.dat goattrk2.seq`
-
 
 ${SRCDIR}/goatdata.c: ${SRCDIR}/goattrk2.dat
 	${SRCDIR}/bme/dat2inc $< $@
