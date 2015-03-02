@@ -48,11 +48,13 @@ ${SRCDIR}/bme/datafile: ${SRCDIR}/bme/datafile.c ${SRCDIR}/bme/bme_end.c
 ${SRCDIR}/bme/dat2inc: ${SRCDIR}/bme/dat2inc.c
 	${CC} ${CFLAGS} ${LIBINC} -o $@ $<
 
-
 ${SRCDIR}/goattrk2.dat: ${SRCDIR}/player.s ${SRCDIR}/altplayer.s \
-	${SRCDIR}/chargen.bin ${SRCDIR}/palette.bin ${SRCDIR}/cursor.bin \
-	${SRCDIR}/goattrk2.bmp ${SRCDIR}/goattrk2.seq
-	${SRCDIR}/bme/datafile $@ ${SRCDIR}/goattrk2.seq
+	  ${SRCDIR}/chargen.bin ${SRCDIR}/palette.bin ${SRCDIR}/cursor.bin \
+          ${SRCDIR}/goattrk2.bmp ${SRCDIR}/goattrk2.seq
+	 # this is a little nasty, but its possibly the only way to do this.
+	 echo goattrk2.dat hack
+	 echo `cd src; bme/datafile goattrk2.dat goattrk2.seq`
+
 
 ${SRCDIR}/goatdata.c: ${SRCDIR}/goattrk2.dat
 	${SRCDIR}/bme/dat2inc $< $@
@@ -124,8 +126,7 @@ clean:
 	${RM} ${OBJDIR}/*.o
 	${RM} ${OBJDIR}/asm/*.o
 	${RM} ${OBJDIR}/bme/*.o
+	${RM} ${SRCDIR}/goattrk2.dat ${SRCDIR}/goatdata.c
 	${RM} ${OBJDIR}/resid/*.o
 	${RM} ${OBJDIR}/resid-fp/*.o
-	${RM} ${OBJDIR}/bme/datafile ${OBJDIR}/bme/dat2inc
-	${RM} ${SRCDIR}/goatdata.c ${SRCDIR}/goattrk2.dat
 	${RM} ${EXE}
